@@ -1,0 +1,1923 @@
+--- page 1 ---
+Jewellery Box Interactive Installation -
+Technical Recommendations
+Project:  ENBD Pearl Museum - Jewellery Box Interactive
+Document Date:  November 3, 2025
+Prepared For:  AL T ayer Stocks / 2D:3D
+Reference:  ATS-50957-ENBD-PEARL-MA-2D3D-0040
+Executive Summary
+This document provides comprehensive technical recommendations for implementing the jewellery
+box interactive installation at the ENBD Pearl Museum. The system comprises 3 interactive plinths
+connected to a management node, which interfaces with the Q-SYS show control system in the server
+room. Based on analysis of the project requirements and the existing design documentation, I recom‐
+mend an Ethernet-based architecture  for maximum reliability, bidirectional communication
+capability, and seamless Q-SYS integration.
+⚠️ IMPORTANT CORRECTION NOTICE - NOVEMBER 3,
+2025
+ISSUE IDENTIFIED:  The original management node hardware recommendations (ASUS PN51, Intel
+NUC, Helix) were INCORRECT  as they only provide 2 native Ethernet ports. This system requires 4
+Ethernet ports :
+- 3x connections to plinths (SH3-C5, SH3-C6, SH3-C7) via 5m Cat6 cables
+- 1x connection to Q-SYS server room via 40m Cat6a cable
+CORRECTED RECOMMENDATIONS:  This document now provides TWO viable hardware solutions:
+OPTION 1: Industrial Mini PC with 4 Native Ethernet Ports
+(RECOMMENDED) ⭐
+Model:  Qotom Q355G4-S02 (Intel i5-5200U, 4x Gigabit LAN)
+Cost:  ~$470 (with rack shelf)
+Key Benefits:  Fanless (silent), industrial-grade, single device, 36W power
+Dimensions:  187mm x 140mm x 42mm (fits in 1U rack)
+OPTION 2: Mini PC + Managed Ethernet Switch
+Configuration:  Intel NUC 11 Pro + TRENDnet 5-port switch (or Netgear GS305E budget)
+Cost:  ~$725 (industrial) or ~$585 (budget)
+Key Benefits:  Modern processor, expandability, modular architecture
+PRIMARY RECOMMENDATION: Qotom Q355G4  for best reliability, cost-effectiveness, and silent
+operation in a museum environment.• 
+• 
+• 
+• 
+• 
+• 
+• 1
+
+--- page 2 ---
+See Section 3 (pages 8-20) for complete corrected specifications with exact dimensions,
+detailed comparisons, and procurement guidance.
+1. Communication Protocol Decision
+1.1 Plinth to Management Node Communication (5m runs)
+RECOMMENDATION: Cat6 Ethernet with OSC over UDP
+Rationale:
+Why NOT DMX:
+- Unidirectional Limitation:  Standard DMX512 is unidirectional (controller → devices). While RDM
+(Remote Device Management) adds bidirectional capability, it’s primarily designed for lighting fixtures
+and not well-suited for custom control applications
+- Limited Data Rate:  DMX512 runs at 250 kbit/s with 512 channels per universe - adequate but
+inflexible for future expansion
+- Protocol Complexity:  Would require DMX encoding/decoding at each plinth and custom protocol
+mapping
+- Q-SYS Integration:  Q-SYS doesn’t natively handle DMX as a control protocol (it’s primarily for
+audio/video/control systems)
+- Bidirectional Requirement:  Your system needs SEND (button events, switch status) and RECEIVE
+(motor control, LED commands) - this is cumbersome with DMX/RDM
+Why Ethernet (Cat6):
+- Native Bidirectional:  Full-duplex communication allows simultaneous send/receive
+- OSC Compatibility:  Open Sound Control (OSC) over UDP is explicitly mentioned in your design
+document and is natively supported by Q-SYS
+- Future-Proof:  Sufficient bandwidth (1 Gbps) for any future enhancements
+- Q-SYS Native:  Q-SYS Core has built-in Ethernet networking and excellent OSC support
+- Reliability:  At 5m, Cat6 is extremely reliable with minimal EMI concerns
+- Standardization:  Uses standard IT networking protocols, easier to troubleshoot and maintain
+- Cost-Effective:  Cat6 cable and RJ45 connectors are readily available and inexpensive
+1.2 Management Node to Q-SYS Server Room (40m run)
+RECOMMENDATION: Cat6a Shielded (STP) Ethernet
+Rationale:
+Q-SYS Native Protocol:  Q-SYS Core is network-based and designed for Ethernet connectivity
+Distance:  40m is well within the 100m Cat6a specification
+Shielding:  S/FTP (shielded/foiled twisted pair) provides protection against EMI in commercial en‐
+vironments where lighting, motors, and AV equipment create electrical noise
+10 Gigabit Capable:  Cat6a supports 10GBASE-T up to 100m, providing future-proofing
+OSC/TCP/UDP:  Q-SYS supports OSC, TCP, and UDP protocols natively - no protocol conversion
+needed
+Reliability:  Proven technology for mission-critical AV installations• 
+• 
+• 
+• 
+• 
+• 2
+
+--- page 3 ---
+1.3 Protocol Architecture
+Plinth ←→ Management Node: OSC over UDP (Port 5000-5005)
+Management Node ←→ Q-SYS Core: OSC over UDP (Port 5010)
+                                or TCP/IP (Port 1700-1710)
+Message Structure:
+- Button Press: /plinth/[1-3]/button/press
+- Button Release: /plinth/[1-3]/button/release
+- Maintenance Switch: /plinth/[1-3]/maintenance [0|1]
+- Motor Control: /plinth/[1-3]/motor/open  or /plinth/[1-3]/motor/close
+- LED Control: /plinth/[1-3]/led [0-255]  (brightness) or /plinth/[1-3]/led/pulse
+2. Plinth Hardware Recommendations
+2.1 Recommended Solution: Raspberry Pi 4 Model B (4GB) with
+Industrial Accessories
+Model:  Raspberry Pi 4 Model B, 4GB RAM
+Part Number:  RPI4-MODBP-4GB
+Why Raspberry Pi 4:
+PROS:
+- Native Ethernet:  Built-in Gigabit Ethernet (no shields or adapters needed)
+- Sufficient I/O:  40-pin GPIO header provides ample digital I/O for button, switch, LED, and motor con‐
+trol
+- Processing Power:  Quad-core ARM processor can handle network protocols, motor control, and lo‐
+gic
+- Operating System:  Linux-based (Raspberry Pi OS) allows use of proven libraries (Python OSC,
+pigpio for motor control)
+- Development:  Easy to program and test; large community support
+- Reliability:  Proven in many installation projects worldwide
+- Cost-Effective:  ~$55 USD per unit
+- Remote Access:  Can be remotely accessed via SSH for diagnostics and updates
+CONS & MITIGATIONS:
+- SD Card Failure Risk:  Standard SD cards can fail in 24/7 installations
+- MITIGATION:  Use industrial-grade SD cards (SanDisk High Endurance, Samsung PRO Endurance)
+rated for continuous operation
+- ALTERNATIVE:  Use USB boot with industrial USB drive, disabling SD entirely
+- No Real-Time OS:  Linux is not real-time, but for this application (motor control with stepper driver
+doing the timing), it’s adequate
+- Power Supply:  Requires stable 5V power
+- MITIGATION:  Use official Raspberry Pi power supply (5V/3A) or industrial DIN-rail power supply
+Alternative Considered: Arduino (Not Recommended)
+Why Arduino is Less Suitable:
+- Ethernet Not Native:  Requires Ethernet shield (Arduino Uno R4 WiFi has networking, but limited)
+- Limited Processing:  Harder to implement robust OSC protocol handling3
+
+--- page 4 ---
+- Programming Complexity:  Implementing network protocols and multi-tasking is more difficult
+- No Operating System:  Bare-metal programming increases development time and reduces flexibil‐
+ity
+- Maintenance:  Harder to remotely diagnose and update
+2.2 Complete Plinth Hardware Specification
+Each plinth requires:
+Component Specification Part Number /
+ModelPurpose
+Controller Raspberry Pi 4 Model
+B, 4GB RAMRPI4-MODBP-4GB Main controller
+Storage Industrial microSD
+Card, 32GBSanDisk High Endur‐
+ance SDSQQNR-032GOperating system &
+software
+Power Supply 5V/3A USB-C Power
+SupplyOfficial RPi PSU
+(SC0218)Power for Raspberry
+Pi
+Stepper Driver Stepper Motor Driver
+BoardTB6600 or TMC2209
+(quiet)Drive stepper motor
+with JST connector
+Case/Enclosure DIN-rail mountable
+enclosurePhoenix Contact EMG
+22-B or similarProtection and
+mounting inside
+plinth
+LED Driver  (if
+needed)MOSFET or transistor
+for LED controlIRLZ44N MOSFET PWM control for
+button LED
+Connectors JST connector (3-pin)
+for motorPre-wired cable to
+TB6600Connect to stepper
+motor
+Connectors Screw terminals or
+connector blockPhoenix Contact or
+WagoButton and mainten‐
+ance switch wiring4
+
+--- page 5 ---
+2.3 Raspberry Pi I/O Allocation
+GPIO Pin Function Connection
+GPIO 17 Digital Input (Pull-up) Button Press Detection
+GPIO 27 Digital Input (Pull-up) Maintenance Switch
+GPIO 22 PWM Output Button LED Control
+GPIO 23 Digital Output Stepper STEP signal
+GPIO 24 Digital Output Stepper DIRECTION signal
+GPIO 25 Digital Output Stepper ENABLE signal
+GND Ground Common ground for all
+devices
+5V Power Output Power LED if needed (through
+resistor)
+2.4 Stepper Motor Driver Selection
+Recommended: TMC2209 Driver Module
+Silent Operation:  Important for museum environment (nearly silent operation)
+Current Control:  2.8A peak current, adjustable via potentiometer
+Voltage:  Operates on 12-24V (supplied separately to driver, not from Pi)
+Interface:  STEP/DIR interface compatible with GPIO
+Protection:  Over-temperature, short-circuit protection
+Cost:  ~$15 USD per unit
+Alternative: TB6600 Driver
+Higher Current:  4A peak, suitable for larger steppers
+More Affordable:  ~$8 USD
+Noisier:  Audible motor noise (may be acceptable)
+3. Management Node Specifications
+⚠️ CORRECTION - ETHERNET PORT REQUIREMENT
+CRITICAL ISSUE IDENTIFIED:  The previously recommended hardware (ASUS PN51, Intel NUC, Helix)
+typically only provides 2 native Ethernet ports, but this system requires 4 Ethernet ports :
+- 3x Ethernet connections to plinths (5m each)
+- 1x Ethernet connection to Q-SYS server room (40m)
+The following corrected recommendations provide TWO viable hardware solutions  that accurately
+meet the 4-port requirement for a robust, industrial-grade 2+ year museum installation.• 
+• 
+• 
+• 
+• 
+• 
+• 
+• 
+• 5
+
+--- page 6 ---
+3.1 CORRECTED RECOMMENDATIONS - TWO OPTIONS
+OPTION 1: Industrial Mini PC with 4+ Native Ethernet Ports  ⭐
+RECOMMENDED
+This option uses a purpose-built networking appliance with 4 or more native Gigabit Ethernet ports,
+eliminating the need for USB adapters or separate switches.
+Recommended Models:
+Primary Recommendation: Qotom Q355G4
+Manufacturer:  Qotom
+Model:  Q355G4
+Processor:  Intel Core i5-5200U (Broadwell-U, 2.2GHz base, up to 2.7GHz turbo, 15W TDP)
+Part Number:  Q355G4-S02 
+Key Specifications:
+| Parameter | Specification |
+|-----------|---------------|
+| Processor  | Intel Core i5-5200U (dual-core, 2.2-2.7GHz, AES-NI support) |
+| RAM | 8GB DDR3L SO-DIMM (expandable, 1600MHz) |
+| Storage  | 128GB mSATA SSD + 2.5” SATA bay for expansion |
+| Ethernet Ports  | 4x Intel Gigabit LAN (Intel i210-AT chipset)  |
+| Additional I/O  | 4x USB 3.0, 2x USB 2.0, 1x HDMI, 1x VGA, 1x RS232 COM |
+| Expansion  | 1x Mini PCIe slot (for WiFi/4G if needed) |
+| Power Supply  | 12V DC, 3A (36W) - external adapter included |
+| Cooling  | Fanless  - aluminum chassis with passive cooling |
+| Operating System  | Windows 10/11, Ubuntu 22.04 LTS, or other Linux distributions |
+| Operating Temp  | 0°C to 50°C (commercial); can operate to 60°C |
+| Certifications  | CE, FCC, RoHS |
+| MTBF  | >50,000 hours (5.7 years continuous operation) |
+Physical Dimensions:
+| Dimension | Measurement (mm) | Measurement (inches) |
+|-----------|------------------|----------------------|
+| Width  | 187 mm | 7.36” |
+| Depth  | 140 mm | 5.51” |
+| Height  | 42 mm | 1.65” |
+| Weight  | 1.0 kg | 2.2 lbs |
+Rack Mounting:
+- Rack Space Required:  1U (with custom shelf or bracket)
+- Mounting Method:  Place on vented 1U rack shelf (Middle Atlantic U1 or similar)
+- Rack Depth:  Fits in shallow racks (140mm/5.5” depth + 50mm clearance for cables = 200mm total)
+- Recommended Shelf:  Middle Atlantic U1 vented shelf (19” x 9.5” deep)
+Estimated Cost:
+- Mini PC (8GB RAM, 128GB SSD):  $380-$450 USD
+- 1U Rack Shelf:  $40-$60 USD
+- Total:  ~$450-$510 USD6
+
+--- page 7 ---
+Network Port Allocation:
+| Port | Connection | Purpose |
+|------|------------|---------|
+| LAN1 | Plinth 1 (SH3-C5) - 5m Cat6 | OSC communication with Plinth 1 |
+| LAN2 | Plinth 2 (SH3-C6) - 5m Cat6 | OSC communication with Plinth 2 |
+| LAN3 | Plinth 3 (SH3-C7) - 5m Cat6 | OSC communication with Plinth 3 |
+| LAN4 | Q-SYS Core - 40m Cat6a STP | OSC/TCP to show control system |
+PROS:
+- ✅ 
+4 native Gigabit Ethernet ports  - no adapters or hubs needed
+- ✅ 
+Fanless operation  - silent, no moving parts to fail, ideal for museum environment
+- ✅ 
+Industrial-grade reliability  - designed for 24/7 networking applications (firewalls, routers)
+- ✅ 
+Low power consumption  - 36W maximum, energy efficient
+- ✅ 
+Compact size  - fits easily in 1U rack space with room to spare
+- ✅ 
+AES-NI hardware acceleration  - enhances security and encryption performance
+- ✅ 
+Proven platform  - widely used in firewall/routing applications (pfSense, OPNsense)
+- ✅ 
+Metal chassis  - robust construction for long-term reliability
+- ✅ 
+Remote management  - full SSH access for diagnostics and updates
+- ✅ 
+No USB adapters  - eliminates potential points of failure
+CONS:
+- ⚠️ Older generation processor (5th gen Intel) - still adequate for networking tasks but not latest tech‐
+nology
+- ⚠️ Limited availability - may require ordering from specialized vendors or international suppliers
+- ⚠️ Higher initial cost compared to Option 2
+Alternative Model: Protectli Vault VP4650
+Manufacturer:  Protectli
+Model:  Vault VP4650 (FW4C series) 
+Key Specifications:
+- Processor:  Intel Core i5-8250U (quad-core, 1.6-3.4GHz, 15W TDP)
+- RAM:  8GB DDR4-2400 SO-DIMM
+- Storage:  120GB M.2 NVMe SSD
+- Ethernet: 4x Intel Gigabit LAN (Intel i211-AT)
+- Cooling:  Fanless, aluminum chassis
+- Dimensions:  146mm (W) x 145mm (D) x 54mm (H) / 5.75” x 5.7” x 2.1”
+- Weight:  1.3 kg / 2.86 lbs
+Estimated Cost:  $550-$650 USD (+ rack shelf)
+PROS:
+- ✅ Newer 8th gen processor (better performance)
+- ✅ DDR4 memory (faster than DDR3L)
+- ✅ NVMe storage (faster boot and operation)
+- ✅ US-based manufacturer with excellent support
+- ✅ 4 native Gigabit Ethernet ports
+CONS:
+- ⚠️ Higher cost (~$200 more than Qotom)
+- ⚠️ Larger footprint (5.75” x 5.7” vs Qotom’s slimmer profile)
+7
+
+--- page 8 ---
+OPTION 2: Mini PC (2 ports) + Managed Ethernet Switch
+This option combines a standard dual-port mini PC with a small industrial managed Ethernet switch,
+providing 4+ total Ethernet ports through a switch-based architecture.
+Hardware Configuration:
+Component A: Mini PC (2 Native Ethernet Ports)
+Recommended Model: Intel NUC 11 Pro (NUC11TNHi5)
+Manufacturer:  Intel
+Model:  NUC11TNHi5 
+Key Specifications:
+| Parameter | Specification |
+|-----------|---------------|
+| Processor  | Intel Core i5-1135G7 (quad-core, 2.4GHz base, up to 4.2GHz turbo, 28W TDP) |
+| RAM | 8GB DDR4-3200 SO-DIMM |
+| Storage  | 256GB M.2 NVMe SSD (PCIe 4.0) |
+| Ethernet Ports  | 2x Intel Gigabit LAN (Intel i219-V + i225-LM 2.5GbE)  |
+| Additional I/O  | 4x USB 3.1, 2x USB-C (Thunderbolt 4), HDMI, DisplayPort |
+| Power Supply  | 19V DC, 90W external adapter |
+| Cooling  | Low-noise fan (can be configured for quiet operation) |
+| Operating System  | Windows 11 Pro or Ubuntu 22.04 LTS |
+| Dimensions  | 117mm (W) x 112mm (D) x 42mm (H) / 4.6” x 4.4” x 1.65” |
+| Weight  | 0.7 kg / 1.5 lbs |
+Estimated Cost:  $450-$550 USD (barebone + RAM + SSD)
+Component B: Industrial Managed Ethernet Switch (5-8 ports)
+Recommended Model: TRENDnet TI-PG541i (Industrial 5-Port Gigabit PoE+ Managed
+Switch)
+Manufacturer:  TRENDnet
+Model:  TI-PG541i 
+Key Specifications:
+| Parameter | Specification |
+|-----------|---------------|
+| Total Ports  | 5x Gigabit Ethernet (10/100/1000 Mbps)  |
+| PoE Capability  | 4x PoE+ ports (up to 30W per port, 120W total budget) - not required but available
+|
+| Management  | Web-based GUI, CLI, SNMP v1/v2c/v3 |
+| Switching Capacity  | 10 Gbps |
+| Features  | VLAN support (up to 256), QoS, IGMP snooping, port mirroring, loop detection |
+| Mounting  | DIN-rail mountable  or wall-mount (included brackets) |
+| Power Supply  | Redundant dual DC inputs (12-52V, 2A) or single AC input (100-240V) |
+| Operating Temp  | -40°C to 75°C (-40°F to 167°F) |
+| Housing  | IP30-rated metal enclosure |
+| Dimensions  | 144mm (W) x 110mm (D) x 32mm (H) / 5.67” x 4.33” x 1.26” |
+| Weight  | 0.6 kg / 1.32 lbs |
+| Certifications  | CE, FCC, RoHS |
+Estimated Cost:  $150-$200 USD8
+
+--- page 9 ---
+Alternative Switch Option: Netgear GS305E (Budget Option)
+Manufacturer:  Netgear
+Model:  GS305E (5-Port Gigabit Managed Switch) 
+Key Specifications:
+- Ports:  5x Gigabit Ethernet
+- Management:  Web-based GUI, basic VLAN and QoS
+- Dimensions:  94mm x 100mm x 27mm / 3.7” x 3.9” x 1.1”
+- Weight:  0.25 kg / 0.55 lbs
+- Operating Temp:  0°C to 50°C (commercial, not industrial-rated)
+- Power:  External 12V adapter
+- Cost:  $30-$40 USD
+Note:  The Netgear GS305E is a commercial  (not industrial) switch with a narrower operating temper‐
+ature range. It’s suitable for climate-controlled environments but lacks the ruggedization of the
+TRENDnet model.
+System Architecture for Option 2:
+┌─────────────────────────┐
+│   Intel NUC 11 Pro      │
+│   (Management Node)      │
+│- OSC Routing Logic    │
+│- Button Interlock     │
+│-2x Ethernet Ports    │
+└───────┬───────────┬─────┘
+│ │
+                      Port 1│ │Port 2
+│ │
+┌─────────────────┘ └──────────────────────┐
+│ │
+│ 40m Cat6a STP
+│ │
+│ ▼
+┌─────▼──────────────────────────┐ ┌──────────────────┐
+│  TRENDnet TI -PG541i Switch     │ │  Q-SYS Core      │
+│  (5-Port Managed)              │ │  (192.168.10.50) │
+│- DIN rail mounted in rack    │ └──────────────────┘
+│- Connects 3 plinths          │
+└──┬────────┬────────┬───────────┘
+│ │ │
+5m │5m │5m │
+  Cat6 │   Cat6 │   Cat6 │
+│ │ │
+┌──▼──┐ ┌──▼──┐ ┌──▼──┐
+│Plinth││Plinth││Plinth│
+│1││2││3│
+└──────┘ └──────┘ └──────┘
+Network Configuration:
+- NUC Port 1  → TRENDnet Switch (uplink)
+- NUC Port 2  → Q-SYS Core (40m direct connection)
+- Switch Port 1  → Plinth 1
+- Switch Port 2  → Plinth 2
+- Switch Port 3  → Plinth 39
+
+--- page 10 ---
+- Switch Port 4  → Unused (spare for expansion)
+- Switch Port 5  → NUC uplink
+Rack Mounting for Option 2:
+- 1U Rack Shelf:  Middle Atlantic U1 vented shelf
+- Layout:  NUC + TRENDnet switch side-by-side on shelf
+- Combined Dimensions:  117mm + 144mm = 261mm width (fits easily in 19” / 482mm rack)
+- Total Depth:  112mm (NUC, deepest component)
+- Cable Management:  40m cable exits from rear of rack
+Total Cost for Option 2:
+| Component | Cost (USD) |
+|-----------|------------|
+| Intel NUC 11 Pro (configured) | $450-$550 |
+| TRENDnet TI-PG541i Switch | $150-$200 |
+| 1U Rack Shelf (Middle Atlantic U1) | $40-$60 |
+| Total  | $640-$810  |
+Budget Alternative (with Netgear GS305E):
+| Component | Cost (USD) |
+|-----------|------------|
+| Intel NUC 11 Pro (configured) | $450-$550 |
+| Netgear GS305E Switch | $30-$40 |
+| 1U Rack Shelf | $40-$60 |
+| Total  | $520-$650  |
+PROS:
+- ✅ 
+Modern processor  - 11th gen Intel with excellent performance
+- ✅ 
+Flexibility  - separate switch can be replaced/upgraded independently
+- ✅ 
+Expandability  - switch provides additional ports for future needs
+- ✅ 
+Managed switch features  - VLAN, QoS, port mirroring for advanced diagnostics
+- ✅ 
+Redundancy option  - if switch fails, can temporarily connect directly to NUC
+- ✅ 
+Spare ports  - switch provides extra ports for expansion
+- ✅ 
+Easy sourcing  - both NUC and switch are widely available
+CONS:
+- ⚠️ 
+More components  - two devices instead of one (more points of failure)
+- ⚠️ 
+Higher complexity  - requires switch configuration and management
+- ⚠️ 
+More power  - requires two power supplies (NUC + switch)
+- ⚠️ 
+More expensive  - total cost ~$150-$300 higher than Option 1
+- ⚠️ 
+Fan noise  - Intel NUC has a fan (though quiet)
+- ⚠️ 
+Network topology  - all plinths share switch bandwidth (10Gbps total, more than adequate)10
+
+--- page 11 ---
+3.2 DETAILED COMPARISON & RECOMMENDATION
+Side-by-Side Comparison
+Feature Option 1: Qotom Q355G4 Option 2: NUC + Switch
+Total Ethernet Ports 4 native 2 native + 5 on switch = 7
+total
+Component Count 1 device 2 devices
+Rack Space 1U 1U
+Total Cost ~$450-$510 ~$640-$810 (or $520-$650
+budget)
+Cooling Fanless (silent) Low-noise fan
+Power Consumption 36W 90W (NUC) + 20W (switch) =
+110W
+Processor Intel i5-5200U (5th gen) Intel i5-1135G7 (11th gen)
+Reliability (MTBF) >50,000 hours NUC: 30,000 hours; Switch:
+>40,000 hours
+Complexity Low (single device) Medium (two devices, switch
+config)
+Industrial Rating Yes (0-60°C) NUC: No (0-50°C); Switch: Yes
+(-40 to 75°C)
+Future Expansion Limited (4 ports total) Excellent (7 ports total, 2
+spare)
+Maintenance Simple (one device) More complex (two devices)
+Performance Adequate for OSC routing Excellent (modern processor)
+FINAL RECOMMENDATION: Option 1 (Qotom Q355G4) ⭐
+For this 2+ year museum installation, I recommend Option 1  for the following reasons:
+Simplicity & Reliability:  Single device = fewer points of failure, critical for 24/7 museum opera‐
+tion
+Silent Operation:  Fanless design is ideal for museum environment (no mechanical noise)
+Lower Power:  36W vs 110W saves energy and generates less heat
+Cost-Effective:  ~$300 less than Option 2 with managed switch
+Proven Platform:  Qotom mini PCs are widely deployed in firewall/networking applications with
+excellent reliability1. 
+2. 
+3. 
+4. 
+5. 11
+
+--- page 12 ---
+Adequate Performance:  OSC routing and button interlock logic are not computationally
+intensive; the i5-5200U is more than sufficient
+Industrial Grade:  Designed for 24/7 operation in commercial/industrial environments
+When to Choose Option 2:
+- If you need spare Ethernet ports for future expansion
+- If you require advanced switch features (VLAN segmentation, port mirroring for diagnostics)
+- If maximum processing power is needed (though not required for this application)
+- If you want the ability to independently replace/upgrade the switch
+3.3 Physical Dimensions for Rack Layout (UPDATED)
+For Vendor Rack Layout Planning:
+Option 1: Qotom Q355G4 Configuration
+Dimension Measurement (mm) Measurement (inches)
+Total Rack Width 482.6 mm (19” standard) 19.0”
+Device Width 187 mm 7.36”
+Device Depth 140 mm 5.51”
+Device Height 42 mm 1.65”
+Rack Height 44.45 mm (1U) 1.75” (1U)
+Total Rack Depth Required 200 mm (device + cable
+clearance)7.87”
+Weight (with shelf) 1.5 kg 3.3 lbs
+Mounting Method Placed on Middle Atlantic U1
+vented 1U shelf
+Cable Connections (rear of device):
+- 4x RJ45 Ethernet ports (3 for plinths + 1 for Q-SYS)
+- 1x DC power jack (12V, external adapter)
+- 1x HDMI (for initial setup/diagnostics, optional)6. 
+7. 12
+
+--- page 13 ---
+Option 2: NUC + Switch Configuration
+Dimension Measurement (mm) Measurement (inches)
+Total Rack Width 482.6 mm (19” standard) 19.0”
+Combined Device Width 261 mm (117 + 144) 10.3” (fits in 19” rack)
+Maximum Depth 112 mm (NUC depth) 4.4”
+Maximum Height 42 mm (NUC height) 1.65”
+Rack Height 44.45 mm (1U) 1.75” (1U)
+Total Rack Depth Required 160 mm (devices + cable
+clearance)6.3”
+Weight (with shelf) 2.0 kg 4.4 lbs
+Mounting Method Both devices placed on
+Middle Atlantic U1 vented 1U
+shelf
+Cable Connections:
+- NUC: 2x RJ45 Ethernet + 1x DC power
+- Switch: 5x RJ45 Ethernet + 1x DC power (or AC adapter)
+3.4 Power Requirements (UPDATED)
+Option 1: Qotom Q355G4
+Component Voltage Current Power
+Qotom Q355G4 Mini
+PC12V DC 3A 36W
+Total 12V DC 3A 36W
+Power Supply:  External 12V 3A adapter (included with unit)
+AC Input:  100-240V AC, 50/60Hz (universal)
+Option 2: NUC + Switch
+Component Voltage Current Power
+Intel NUC 11 Pro 19V DC 4.74A 90W
+TRENDnet TI-PG541i
+Switch12-52V DC 2A 20W (max)
+Total Mixed ~6.74A 110W13
+
+--- page 14 ---
+Power Supplies:
+- Intel NUC: 19V 90W external adapter (included)
+- TRENDnet Switch: 12-52V DC (use 12V 2A adapter) or 100-240V AC adapter
+Alternative (Netgear GS305E):
+- Netgear: 12V 1A external adapter (12W)
+- T otal: 90W + 12W = 102W
+4. Wiring Specifications
+4.1 Plinth to Management Node (5m runs x 3)
+Specification Details
+Cable Type Cat6 UTP (Unshielded T wisted Pair)
+Length 5 meters per cable (3 cables total)
+Conductor 23 AWG solid copper (for permanent installa‐
+tion)
+Jacket CMR or CMP rated (for in-wall/plenum
+installation if required)
+Connector RJ45 modular plugs, factory terminated or
+field-terminated with keystones
+Color Code T568B wiring standard
+Recommended Brand Belden 2413, Commscope/Systimax, or equi‐
+valent
+Shielding Not required at 5m in typical environment, but
+can use Cat6 F/UTP if EMI is a concern
+Why Cat6 UTP at 5m:
+- 5 meters is very short; EMI/RFI unlikely to be an issue
+- UTP is more flexible and easier to terminate
+- Cost-effective
+- If plinths are near high-power lighting or motor drives, upgrade to Cat6 F/UTP (foiled)14
+
+--- page 15 ---
+4.2 Management Node to Q-SYS Server Room (40m run)
+Specification Details
+Cable Type Cat6a S/FTP (Shielded/Foiled T wisted Pair)
+Length 40 meters (single continuous run, no splices)
+Conductor 23 AWG solid copper
+Jacket CMR or CMP rated (check local fire codes)
+Connector RJ45 shielded modular plugs with metal shells
+Color Code T568B wiring standard
+Shielding S/FTP - overall shield + individual pair foil
+shields
+Grounding Shield must be grounded at ONE end only
+(typically at server room) to avoid ground
+loops
+Recommended Brand Belden 10GXS, Siemon TERA Cat6a, or equi‐
+valent
+Installation Use cable tray or conduit; avoid running
+parallel to AC power cables
+Why Cat6a S/FTP at 40m:
+- 40m run may pass through walls, above ceiling, near HVAC, lighting, and power distribution
+- Shielding protects against EMI/RFI for reliable operation
+- Cat6a supports 10 Gigabit Ethernet (future-proofing)
+- Critical link to Q-SYS; must be rock-solid reliable15
+
+--- page 16 ---
+4.3 Power Wiring for Plinths
+Specification Details
+Cable Type 3-conductor power cable (Live, Neutral,
+Ground)
+Conductor Size 18 AWG (1.0 mm²) for low-power devices
+Voltage 230V AC (UAE standard) or local voltage
+Power Consumption per Plinth ~30W (Raspberry Pi: 15W, LED: 5W, Motor:
+10W)
+Circuit Protection Dedicated 5A circuit breaker or fused distribu‐
+tion
+Connectors IEC C13/C14 connector or hardwired to
+terminal block
+Installation Must comply with UAE electrical codes; in‐
+stalled by licensed electrician
+Note:  Power is stated as available at each plinth location. Verify with electrical contractor.
+4.4 Motor and Sensor Wiring Inside Plinth
+Component Cable Type Length Connector
+Stepper Motor 4-conductor shielded
+(if motor cable not
+supplied)~1m inside plinth 3-pin JST (per spec) +
+4-pin to driver
+Button 2-conductor 22-24
+AWG~0.5m Screw terminal or
+Molex
+Maintenance
+Switch2-conductor 22-24
+AWG~0.5m Screw terminal or
+Molex
+Button LED 2-conductor 22-24
+AWG~0.5m (inside button
+assembly)Integrated with but‐
+ton
+Wiring Best Practices:
+- Use shielded cable for motor wiring to reduce electrical noise
+- Keep low-voltage signal wiring separate from motor power wiring
+- Use proper strain relief for all connections
+- Label all wires clearly
+4.5 Cable Management and Installation
+Cable Trays:  Use metal cable tray or conduit for the 40m run to server room • 16
+
+--- page 17 ---
+Separation:  Maintain 300mm (12”) separation between data cables and AC power cables
+Drip Loops:  Install drip loops at entry points to prevent water ingress
+Labeling:  Label both ends of every cable with unique identifier
+Testing:  T est all Ethernet cables with cable tester (continuity, wiring map, length) before
+connecting equipment
+5. Q-SYS Integration
+5.1 Q-SYS Overview
+Q-SYS (by QSC) is a software-based audio, video, and control platform commonly used in commercial
+AV installations. The Q-SYS Core (processor) runs Q-SYS Designer software and provides:
+Audio processing and routing
+Video processing
+Control logic (Lua scripting)
+Network connectivity (built-in Ethernet)
+Third-party control integration  via TCP/IP, UDP, serial, GPIO
+5.2 Recommended Integration Method
+Primary Recommendation: OSC over UDP
+Parameter Value
+Protocol OSC (Open Sound Control) over UDP
+Port UDP 5010 (configurable in Q-SYS Designer)
+Direction Bidirectional (Management Node ←→ Q-SYS
+Core)
+Message Format OSC messages (see Section 1.3)
+Q-SYS Implementation Use Q-SYS “Named Control” with UDP
+Scripting Component
+Why OSC over UDP:
+- Q-SYS Native Support:  Q-SYS Designer has excellent OSC support via Lua scripting
+- Simplicity:  OSC is human-readable and easy to debug
+- Performance:  UDP is low-latency (no TCP handshake overhead)
+- Already Specified:  Your design document mentions “OSC trigger over UDP”
+- Flexibility:  Easy to add new messages without protocol changes
+Alternative: TCP/IP Socket Communication• 
+• 
+• 
+• 
+• 
+• 
+• 
+• 
+• 17
+
+--- page 18 ---
+Parameter Value
+Protocol TCP/IP with custom ASCII commands
+Port TCP 1700 (configurable)
+Direction Bidirectional
+Message Format ASCII strings (e.g.,
+“PLINTH1_BUTTON_PRESS\n”)
+Q-SYS Implementation Use Q-SYS “TCP/IP Client” or “TCP/IP Server”
+Scripting Component
+Why TCP/IP:
+- Guaranteed Delivery:  TCP ensures messages are delivered (vs. UDP’s “fire and forget”)
+- Connection Status:  Can detect if connection is lost
+- Q-SYS Support:  Q-SYS has robust TCP/IP scripting components
+Trade-offs:
+- TCP has higher overhead (handshake, acknowledgment)
+- For button presses, UDP is sufficient (if a button press is missed, user can press again)
+- For motor commands, TCP might be preferable (guaranteed delivery)
+Recommendation:  Start with OSC over UDP  (as specified in design), but implement connection
+monitoring and automatic reconnection in management node software.
+5.3 Q-SYS Designer Configuration
+Step 1: Add Named Controls
+In Q-SYS Designer, create Named Controls for each plinth:
+plinth1_button  (Boolean - button state)
+plinth1_maintenance  (Boolean - maintenance switch state)
+plinth1_motor_open  (Boolean - trigger motor open)
+plinth1_motor_close  (Boolean - trigger motor close)
+plinth1_led_brightness  (Integer 0-255)
+Repeat for plinth2_  and plinth3_ .
+Step 2: Add UDP Scripting Component
+Drag “Scriptable Controls” component into design
+Configure to listen on UDP port 5010
+Write Lua script to:
+Parse incoming OSC messages
+Update Named Controls
+Send outgoing OSC messages when controls change
+Step 3: Integrate with Show Control Logic
+Connect Named Controls to Block Controllers (for audio, video, lighting)
+Example: When plinth1_button  goes high:• 
+• 
+• 
+• 
+• 
+• 
+• 
+• 
+• 
+• 
+• 
+• 
+• 18
+
+--- page 19 ---
+Disable plinth2_button  and plinth3_button  (interlock)
+Trigger audio cue
+Trigger video content on LED ring
+Trigger lighting scene
+Send plinth1_motor_open  command back to plinth
+5.4 Network Configuration
+Device IP Address Subnet Mask Gateway
+Plinth 1 (SH3-C5) 192.168.10.11 255.255.255.0 192.168.10.1
+Plinth 2 (SH3-C6) 192.168.10.12 255.255.255.0 192.168.10.1
+Plinth 3 (SH3-C7) 192.168.10.13 255.255.255.0 192.168.10.1
+Management Node 192.168.10.1 255.255.255.0 -
+Q-SYS Core 192.168.10.50 255.255.255.0 -
+Note:  If Q-SYS is on existing facility network, use appropriate IP addressing. Consider VLAN
+segmentation for control network isolation.
+5.5 Software Requirements
+Management Node Software:
+Operating System:  Ubuntu Server 22.04 LTS (for mini PC) or Raspberry Pi OS Lite (for RPi)
+Programming Language:  Python 3.10+ or Node.js 18+
+Libraries:
+python-osc  (for OSC messaging)
+asyncio  (for concurrent handling of multiple plinths)
+logging  (for diagnostics)
+Service Management:  systemd service for automatic startup and restart on failure
+Monitoring:  Watchdog timer to restart service if it hangs
+Plinth Software (Raspberry Pi):
+Operating System:  Raspberry Pi OS Lite (headless)
+Programming Language:  Python 3.10+
+Libraries:
+python-osc  (for OSC messaging)
+RPi.GPIO  or gpiod (for GPIO control)
+pigpio (for hardware PWM for stepper motor)
+Service Management:  systemd service
+Remote Access:  SSH enabled for maintenance
+5.6 Middleware Requirements
+None Required  - Q-SYS and the management node can communicate directly via OSC/UDP or TCP/IP.
+No additional middleware software (e.g., Crestron control processor, AMX controller) is needed.• 
+• 
+• 
+• 
+• 
+• 
+• 
+• 
+• 
+• 
+• 
+• 
+• 
+• 
+• 
+• 
+• 
+• 
+• 
+• 
+• 19
+
+--- page 20 ---
+Optional Enhancements:
+- MQTT Broker:  For more complex IoT-style messaging (overkill for this project)
+- Node-RED:  Visual programming for message routing (useful for testing and prototyping)20
+
+--- page 21 ---
+6. System Architecture Diagram21
+
+--- page 22 ---
+┌─────────────────────────────────────────────────────────────────────────┐
+│                          SERVER ROOM                                    │
+│                                                                         │
+│  ┌────────────────────────────────────────────────────────────────┐   │
+│  │  Q-SYS CORE PROCESSOR                                           │   │
+│  │  ┌────────────────────────────────┐                            │   │
+│  │  │  Q-SYS Designer Software       │                            │   │
+│  │  │  - Audio/Video Processing      │                            │   │
+│  │  │  - Control Logic (Lua)         │                            │   │
+│  │  │  - OSC/UDP Handler (Port 5010) │                            │   │
+│  │  │  - Named Controls              │                            │   │
+│  │  └────────────────────────────────┘                            │   │
+│  │           │ ETH (192.168.10.50)                                │   │
+│  └───────────┼─────────────────────────────────────────────────────   │
+│              │                                                         │
+└──────────────┼─────────────────────────────────────────────────────────┘
+               │
+               │ 40m Cat6a S/FTP Shielded Ethernet
+               │ OSC over UDP (Port 5010)
+               │
+┌──────────────┼─────────────────────────────────────────────────────────┐
+│  LOCAL RACK (Near Exhibition Space)                                    │
+│              │                                                         │
+│  ┌───────────▼──────────────────────────────────────────────────────┐ │
+│  │  MANAGEMENT NODE (1U Rack Mount)                                 │ │
+│  │  ┌────────────────────────────────────────────────┐             │ │
+│  │  │  Industrial Mini PC or Raspberry Pi 4          │             │ │
+│  │  │  - OSC Message Router                          │             │ │
+│  │  │  - Button Interlock Logic                      │             │ │
+│  │  │  - Monitoring & Diagnostics                    │             │ │
+│  │  │  - IP: 192.168.10.1                            │             │ │
+│  │  └────────────────────────────────────────────────┘             │ │
+│  │       │              │              │                            │ │
+│  │  ETH0 │         ETH1 │         ETH2 │         ETH3 (to Q-SYS)    │ │
+│  └───────┼──────────────┼──────────────┼──────────────────────────────┘ │
+│          │              │              │                            │ │
+│    5m Cat6 UTP    5m Cat6 UTP    5m Cat6 UTP                        │ │
+│     OSC/UDP        OSC/UDP        OSC/UDP                           │ │
+│          │              │              │                            │ │
+└──────────┼──────────────┼──────────────┼────────────────────────────────┘
+           │              │              │
+           │              │              │
+┌──────────▼─────┐ ┌──────▼──────┐ ┌────▼────────┐
+│  PLINTH 1      │ │  PLINTH 2   │ │  PLINTH 3   │
+│  (SH3-C5)      │ │  (SH3-C6)   │ │  (SH3-C7)   │
+│ ┌────────────┐ │ │ ┌─────────┐ │ │ ┌─────────┐ │
+│ │Raspberry Pi│ │ │ │RasPi 4  │ │ │ │RasPi 4  │ │
+│ │Model B 4GB │ │ │ │4GB      │ │ │ │4GB      │ │
+│ │IP:         │ │ │ │IP:      │ │ │ │IP:      │ │
+│ │192.168.10  │ │ │ │192.168  │ │ │ │192.168  │ │
+│ │    .11     │ │ │ │  .10.12 │ │ │ │  .10.13 │ │
+│ └─┬──────────┘ │ │ └─┬───────┘ │ │ └─┬───────┘ │
+│   │            │ │   │         │ │   │         │
+│   ├─GPIO17─────┼─┤   ├─GPIO17──┼─┤   ├─GPIO17──┤ Button Input
+│   ├─GPIO27─────┼─┤   ├─GPIO27──┼─┤   ├─GPIO27──┤ Maint. Switch
+│   ├─GPIO22─────┼─┤   ├─GPIO22──┼─┤   ├─GPIO22──┤ LED Control
+│   ├─GPIO23─────┼─┤   ├─GPIO23──┼─┤   ├─GPIO23──┤ Motor STEP
+│   ├─GPIO24─────┼─┤   ├─GPIO24──┼─┤   ├─GPIO24──┤ Motor DIR
+│   └─GPIO25─────┼─┤   └─GPIO25──┼─┤   └─GPIO25──┤ Motor ENABLE
+│                │ │             │ │             │
+│ ┌──────────┐   │ │ ┌─────────┐ │ │ ┌─────────┐ │
+│ │ TMC2209  │   │ │ │ TMC2209 │ │ │ │ TMC2209 │ │22
+
+--- page 23 ---
+│ │ Stepper  │   │ │ │ Driver  │ │ │ │ Driver  │ │
+│ │ Driver   │───┼─┤ └────┬────┘ │ │ └────┬────┘ │
+│ └────┬─────┘   │ │      │      │ │      │      │
+│      │ 3-pin   │ │      │      │ │      │      │
+│      │ JST     │ │      │ JST  │ │      │ JST  │
+│ ┌────▼─────┐   │ │ ┌────▼────┐ │ │ ┌────▼────┐ │
+│ │ STEPPER  │   │ │ │ STEPPER │ │ │ │ STEPPER │ │
+│ │ MOTOR    │   │ │ │ MOTOR   │ │ │ │ MOTOR   │ │
+│ │ (Opens   │   │ │ │ (Opens  │ │ │ │ (Opens  │ │
+│ │ Jewellery│   │ │ │ Box)    │ │ │ │ Box)    │ │
+│ │ Box)     │   │ │ └─────────┘ │ │ └─────────┘ │
+│ └──────────┘   │ └─────────────┘ └─────────────┘
+│                │
+│ ┌──────────┐   │  ┌──────────┐    ┌──────────┐
+│ │  BUTTON  │   │  │  BUTTON  │    │  BUTTON  │
+│ │  with    │◄──┼──┤  with    │◄───┤  with    │
+│ │  LED     │   │  │  LED     │    │  LED     │
+│ │  Halo    │   │  │  Halo    │    │  Halo    │
+│ └──────────┘   │  └──────────┘    └──────────┘
+│                │
+│ ┌──────────┐   │  ┌──────────┐    ┌──────────┐
+│ │MAINT.    │   │  │MAINT.    │    │MAINT.    │
+│ │SWITCH    │◄──┼──┤SWITCH    │◄───┤SWITCH    │
+│ │(Contact) │   │  │(Glass    │    │(Glass    │
+│ │          │   │  │Detect)   │    │Detect)   │
+│ └──────────┘   │  └──────────┘    └──────────┘
+│                │
+│ ┌──────────┐   │  ┌──────────┐    ┌──────────┐
+│ │ 230V AC  │   │  │ 230V AC  │    │ 230V AC  │
+│ │ POWER    │   │  │ POWER    │    │ POWER    │
+│ │ (Local)  │   │  │ (Local)  │    │ (Local)  │
+│ └──────────┘   │  └──────────┘    └──────────┘
+└────────────────┘23
+
+--- page 24 ---
+Data Flow Example: Button Press Sequence
+1.Userpresses buttononPLINTH1
+↓
+2.Raspberry PiGPIO17detects buttonpress(falling edge)
+↓
+3.Raspberry PisendsOSCmessage: /plinth/1/button/press
+→Management Node(192.168.10.1 :5000)
+↓
+4.Management Nodereceives message, implements interlocklogic:
+-SendsOSCtoPLINTH2:/plinth/2/led0(turnoffLED)
+-SendsOSCtoPLINTH3:/plinth/3/led0(turnoffLED)
+-SendsOSCtoPLINTH1:/plinth/1/led/pulse(pulseLED)
+↓
+5.Management NodeforwardstoQ-SYS:
+→OSCmessage: /plinth/1/button/press
+→Q-SYSCore(192.168.10.50 :5010)
+↓
+6.Q-SYSCorereceives OSCmessage:
+-Luascriptupdates NamedControl"plinth1_button" =true
+-Triggers audiocue(AudioFile Playerstarts)
+-Triggers videocontent(MediaServerstartstimeline)
+-Triggers lighting scene(DMXoutputtolighting)
+-SendsOSCbacktoManagement Node:/plinth/1/motor/open
+↓
+7.Management Nodeforwardsmotorcommand toPLINTH1:
+→OSCmessage: /plinth/1/motor/open
+→Raspberry Pi(192.168.10.11 :5001)
+↓
+8.PLINTH1Raspberry Pireceives command:
+-Activates GPIO23(STEP)andGPIO24(DIR)toopenjewellery box
+-SteppermotorrunsviaTMC2209 driver
+-Jewellery boxopenssmoothly
+↓
+9.AfterAVcontentfinishes (e.g.,90seconds):
+Q-SYSsends:/plinth/1/motor/close
+↓
+10.PLINTH1closesjewellery box
+↓
+11.Q-SYSsendsre-enablecommands:
+-/plinth/1/led255(LEDon)
+-/plinth/2/led255(LEDon)
+-/plinth/3/led255(LEDon)
+Allbuttons arereadyfornextinteraction .24
+
+--- page 25 ---
+7. Bill of Materials (BOM)
+7.1 Plinth Components (Quantity: 3 plinths)25
+
+--- page 26 ---
+Item Descrip‐
+tionPart Num‐
+ber /
+ModelQty per
+PlinthQty Total Unit Price
+(USD)Total
+Price
+(USD)
+1 Raspberry
+Pi 4 Model
+B, 4GB
+RAMRPI4-MOD‐
+BP-4GB1 3 $55 $165
+2 Industrial
+microSD
+Card, 32GBSanDisk
+High En‐
+durance
+SDSQQNR-
+032G1 3 $15 $45
+3 Raspberry
+Pi Power
+Supply, 5V/
+3A USB-COfficial RPi
+PSU
+(SC0218)1 3 $10 $30
+4 TMC2209
+Stepper
+Motor
+DriverTMC2209
+Module1 3 $15 $45
+5 Stepper
+Motor
+Power
+Supply,
+24V/2AMean Well
+HDR-30-241 3 $25 $75
+6 DIN-rail en‐
+closure for
+Raspberry
+PiPhoenix
+Contact
+EMG 22-B
+or similar1 3 $30 $90
+7 MOSFET
+for LED
+controlIRLZ44N
+MOSFET1 3 $1 $3
+8 Resistors,
+connect‐
+ors, ter‐
+minal
+blocksAssorted 1 set 3 $10 $30
+9 3-pin JST
+connector
+cable (mo‐Pre-made
+cable or1 3 $5 $1526
+
+--- page 27 ---
+Item Descrip‐
+tionPart Num‐
+ber /
+ModelQty per
+PlinthQty Total Unit Price
+(USD)Total
+Price
+(USD)
+tor to
+driver)connector
+kit
+10 Cat6 UTP
+Ethernet
+Cable, 5mFactory-
+terminated
+patch
+cable1 3 $8 $24
+Plinth
+Subtotal$522
+Notes:
+- Button (ATS-50975-ENBD-PEARL-MA-ID-0113) is assumed to be provided separately (per drawing ref‐
+erence)
+- Stepper motor is assumed to be integrated with jewellery box mechanism (not priced here)
+- Maintenance contact switch assumed provided by display case specialist (Goppion)
+7.2 Management Node Components (CORRECTED)
+Option 1: Qotom Q355G4 (4 Native Ethernet Ports) - RECOMMENDED
+Item Description Part Num‐
+ber / ModelQty Unit Price
+(USD)Total Price
+(USD)
+11 Qotom Indus‐
+trial Mini PC
+with 4 LAN
+portsQ355G4-S02
+(i5-5200U,
+8GB, 128GB)1 $420 $420
+12 1U Rack
+Shelf, 19”,
+VentedMiddle
+Atlantic U1 or
+Raxxess
+UNS-11 $50 $50
+13 Power Supply Included with
+Qotom (12V
+3A)1 $0 $0
+Option 1
+Subtotal$470
+Alternative Model: Protectli Vault VP4650 (Premium Option)27
+
+--- page 28 ---
+Item Description Part Num‐
+ber / ModelQty Unit Price
+(USD)Total Price
+(USD)
+11a Protectli
+Vault 4-port
+firewallVP4650
+(i5-8250U,
+8GB, 120GB)1 $600 $600
+12a 1U Rack
+Shelf, 19”,
+VentedMiddle
+Atlantic U11 $50 $50
+Protectli
+Option Sub‐
+total$650
+Option 2: Intel NUC + Managed Switch
+Item Description Part Num‐
+ber / ModelQty Unit Price
+(USD)Total Price
+(USD)
+14 Intel NUC 11
+ProNUC11TNHi5
+(configured
+with 8GB
+RAM, 256GB
+SSD)1 $500 $500
+15 Industrial
+Managed
+Switch (5-
+port)TRENDnet TI-
+PG541i1 $175 $175
+16 1U Rack
+Shelf, 19”,
+VentedMiddle
+Atlantic U11 $50 $50
+17 Power Sup‐
+pliesIncluded with
+NUC and
+Switch- $0 $0
+Option 2
+Subtotal
+(Industrial)$725
+Budget Alternative for Option 2:28
+
+--- page 29 ---
+Item Description Part Num‐
+ber / ModelQty Unit Price
+(USD)Total Price
+(USD)
+14a Intel NUC 11
+ProNUC11TNHi5
+(configured)1 $500 $500
+15a Managed
+Switch (5-
+port, com‐
+mercial)Netgear
+GS305E1 $35 $35
+16a 1U Rack
+ShelfMiddle
+Atlantic U11 $50 $50
+Option 2
+Budget
+Subtotal$585
+7.3 Cabling & Connectivity
+Item Description Specifica‐
+tionQty Unit Price
+(USD)Total Price
+(USD)
+15 Cat6a S/FTP
+Shielded Eth‐
+ernet CableBelden
+10GXS or
+equivalent,
+40m1 $120 $120
+16 RJ45 Shiel‐
+ded Connect‐
+orsFor Cat6a
+termination
+(if field-ter‐
+minated)2 $5 $10
+17 Cable Man‐
+agementVelcro ties,
+cable labels1 set $20 $20
+18 Ethernet
+Cable T esterFor installa‐
+tion verifica‐
+tion1 $50 $50
+Cabling
+Subtotal$200
+Note:  Cat6 UTP cables for plinths (5m x3) already included in Plinth BOM.29
+
+--- page 30 ---
+7.4 Installation & Miscellaneous
+Item Description Qty Unit Price
+(USD)Total Price
+(USD)
+19 Rack screws,
+washers, cage
+nuts1 set $15 $15
+20 Network switch
+(optional)If using alternat‐
+ive management
+node1 $40
+21 Backup SD cards Spare SD cards
+for Raspberry Pi5 $15
+22 Installation labor
+(low-voltage
+cabling)Estimate for
+cable pulling &
+termination1 $500
+Installation
+Subtotal$630
+7.5 Software & Licensing
+Item Description Qty Unit Price
+(USD)Total Price
+(USD)
+23 Operating Sys‐
+tem (Raspberry
+Pi OS, Ubuntu)Free and open-
+source- $0
+24 Python libraries
+(python-osc,
+etc.)Free and open-
+source- $0
+25 Q-SYS Designer
+SoftwareLicensed with Q-
+SYS Core (as‐
+sumed already
+owned)- $0
+26 Custom software
+developmentPython scripts
+for plinths &
+mgmt node- $2,000
+Software Sub‐
+total$2,00030
+
+--- page 31 ---
+7.6 Total Bill of Materials Summary (UPDATED WITH
+CORRECTIONS)
+Category Option Total Cost (USD)
+Plinth Components  (x3) Standard $522
+Management Node Option 1: Qotom Q355G4
+(RECOMMENDED)$470
+Management Node Option 1: Protectli Vault
+VP4650 (Premium)$650
+Management Node Option 2: NUC + Industrial
+Switch$725
+Management Node Option 2: NUC + Commercial
+Switch (Budget)$585
+Cabling & Connectivity $200
+Installation & Misc $630
+Software Development $2,000
+TOTAL (Option 1: Qotom -
+RECOMMENDED)$3,822
+TOTAL (Option 1: Pro‐
+tectli)$4,002
+TOTAL (Option 2: NUC +
+Industrial Switch)$4,077
+TOTAL (Option 2: NUC +
+Budget Switch)$3,937
+Recommendation: Qotom Q355G4 option provides the best value at $3,822 total  with
+maximum reliability for a museum installation.
+Notes:
+- Prices are approximate and based on November 2025 pricing; verify with suppliers
+- CORRECTION APPLIED:  Previous recommendations incorrectly assumed 2-port mini PCs could be
+used; corrected to 4-port capable hardware
+- Does not include:
+- Stepper motors (assumed part of jewellery box mechanism)
+- Buttons (specified separately: ATS-50975-ENBD-PEARL-MA-ID-0113)
+- Display case maintenance switches (provided by Goppion)
+- AC power wiring and electrical work (done by licensed electrician)31
+
+--- page 32 ---
+- Q-SYS Core hardware (assumed already purchased)
+- Software development cost assumes 20-30 hours of programming and testing at $100/hr
+- Add 10-15% contingency for unexpected expenses
+Cost Comparison:
+- Qotom vs. Previous (Incorrect) Estimate:  ~$65 less, but with correct 4-port capability
+- Most Cost-Effective Solution:  Qotom Q355G4 at $3,822 total
+- Best Performance:  Option 2 with NUC + Industrial Switch at $4,077 (modern processor, expandab‐
+ility)
+- Best Reliability for Museum:  Option 1 with Qotom Q355G4 (fanless, industrial-grade, single
+device)32
+
+--- page 33 ---
+8. Reliability and Maintenance Considerations
+8.1 Reliability Enhancements for 2-Year Operation
+Component Failure Risk Mitigation Strategy
+Raspberry Pi SD Card HIGH - SD cards can fail in
+24/7 operationUse industrial-grade SD cards
+(SanDisk High Endurance
+rated for continuous record‐
+ing). Alternatively, boot from
+USB SSD. Keep backup im‐
+ages.
+Stepper Motor MEDIUM - Mechanical wear Use high-quality stepper mo‐
+tor with rated lifetime >
+10,000 open/close cycles.
+Lubricate mechanism as per
+manufacturer specs.
+Ethernet Cables LOW - Reliable if properly in‐
+stalledUse shielded cables for 40m
+run. Properly terminate and
+test. Secure connections with
+locking RJ45 connectors.
+Power Supplies MEDIUM - Can fail if over‐
+loadedUse power supplies with
+20-30% headroom. Industrial-
+grade Mean Well or similar.
+Button Contacts MEDIUM - Mechanical wear Use high-quality momentary
+switch rated for > 100,000
+actuations.
+Software Crashes MEDIUM - Software bugs Implement systemd service
+with automatic restart. Use
+watchdog timer. Remote
+monitoring.33
+
+--- page 34 ---
+8.2 Preventive Maintenance Schedule
+Task Frequency Responsible Party
+Inspect all cable connec‐
+tionsQuarterly AV T echnician
+Test button functionality Monthly Museum Staff
+Check stepper motor op‐
+erationMonthly Museum Staff
+Review system logs for er‐
+rorsWeekly (automated email
+alerts)Remote Monitoring
+Clean dust from enclos‐
+uresQuarterly Museum Maintenance
+Backup SD card images Before installation, then
+quarterlyAV T echnician
+Test maintenance switch Quarterly Display Case Specialist
+Update software (security
+patches)As needed (quarterly check) AV T echnician
+8.3 Remote Monitoring and Diagnostics
+Implement Remote Access:
+- SSH access to all Raspberry Pi units and management node
+- VPN or secure remote access via Q-SYS network
+- Automated email or SMS alerts for:
+- Button press events (for usage analytics)
+- Error conditions (motor jams, network disconnections)
+- System uptime and health checks
+Logging:
+- All button presses logged with timestamp
+- All motor activations logged
+- Network connectivity status logged
+- Store logs on management node with 30-day retention
+8.4 Spare Parts Inventory
+Recommended spare parts to keep on-site:34
+
+--- page 35 ---
+Item Quantity Reason
+Raspberry Pi 4 Model B, 4GB 2 Quick replacement if one fails
+Industrial microSD Card,
+32GB5 Most likely failure point
+TMC2209 Stepper Driver 2 Backup for driver failure
+Button (ATS-50975-ENBD-
+PEARL-MA-ID-0113)1 Mechanical wear
+Cat6 Ethernet Cable, 5m 2 Physical damage
+Power Supply, 5V/3A 2 Backup for RPi power
+MOSFET (IRLZ44N) 5 Small component, easy to re‐
+place35
+
+--- page 36 ---
+9. Installation Process and Timeline
+9.1 Installation Phases36
+
+--- page 37 ---
+Phase Tasks Duration Dependencies
+Phase 1: Pre-In‐
+stallation• Order all compon‐
+ents
+• Develop and test
+software
+• Prepare rack en‐
+closure3 weeks None
+Phase 2: Plinth As‐
+sembly• Install Raspberry Pi
+in each plinth
+• Wire button, switch,
+motor, LED
+• T est each plinth
+standalone2 days Plinths physically in‐
+stalled
+Phase 3: Cabling • Pull Cat6 cables
+from plinths to man‐
+agement node loca‐
+tion
+• Pull Cat6a cable to
+server room
+• T erminate and test
+all cables3 days Cable pathways
+ready
+Phase 4:
+Management Node
+Setup• Install management
+node in rack
+• Configure network
+• Load and test soft‐
+ware1 day Cabling complete
+Phase 5: Q-SYS In‐
+tegration• Configure Q-SYS
+Designer
+• Program Lua scripts
+• Map Named Con‐
+trols
+• T est OSC commu‐
+nication2 days Management node
+online
+Phase 6: System
+Testing• End-to-end button
+press testing
+• Motor synchroniza‐
+tion testing
+• Interlock logic test‐
+ing
+• Maintenance mode
+testing2 days All components in‐
+stalled37
+
+--- page 38 ---
+Phase Tasks Duration Dependencies
+Phase 7: Final
+Commissioning• Train museum staff
+• Document system
+• Handover1 day T esting complete
+Total: ~4 weeks
+9.2 Pre-Installation Tasks (Software Development)
+Plinth Software (Raspberry Pi):
+1. Set up Raspberry Pi OS Lite (headless)
+2. Install Python 3.10+ and required libraries ( python-osc , RPi.GPIO , pigpio)
+3. Develop Python script:
+- Read button state (GPIO17) with debouncing
+- Read maintenance switch state (GPIO27)
+- Send OSC messages on state changes
+- Receive OSC messages for motor control and LED control
+- Implement stepper motor control (STEP/DIR signals)
+- Implement PWM for LED brightness/pulsing
+4. Configure systemd service for auto-start
+5. T est on bench setup
+6. Create SD card image for deployment to all 3 plinths
+Management Node Software:
+1. Set up operating system (Ubuntu Server or Raspberry Pi OS)
+2. Configure network interfaces (4x Ethernet: 3 for plinths, 1 for Q-SYS)
+3. Install Python or Node.js
+4. Develop message routing software:
+- Listen for OSC messages from 3 plinths
+- Implement button interlock logic (disable other plinths when one is active)
+- Forward messages to Q-SYS
+- Receive commands from Q-SYS and route to appropriate plinth
+- Logging and error handling
+5. Configure systemd service
+6. T est with simulated plinths and Q-SYS
+Q-SYS Configuration:
+1. Add Named Controls for all plinths
+2. Create Scriptable Controls component
+3. Write Lua script for OSC communication
+4. Integrate with audio, video, and lighting cues
+5. T est on bench Q-SYS Core (if available) or simulator
+9.3 Testing Checklist
+[ ] Each button press sends correct OSC message
+[ ] Button press disables other two buttons (LED off)
+[ ] Pressed button LED pulses
+[ ] Q-SYS receives button press and triggers AV content
+[ ] Motor command from Q-SYS opens jewellery box smoothly• 
+• 
+• 
+• 
+• 38
+
+--- page 39 ---
+[ ] Jewellery box opens to 90 degrees and holds position
+[ ] After AV content, motor closes jewellery box
+[ ] All buttons re-enable after sequence completes
+[ ] Maintenance switch detection: when glass is removed, plinth goes offline
+[ ] Maintenance mode: hold button 4 seconds to open, 4 seconds to close
+[ ] Maintenance mode: box stays open during maintenance
+[ ] Network connectivity: if cable is unplugged and reconnected, system recovers
+[ ] Power cycle recovery: if power is lost and restored, system auto-starts
+[ ] Q-SYS reboot: system reconnects after Q-SYS restarts• 
+• 
+• 
+• 
+• 
+• 
+• 
+• 
+• 39
+
+--- page 40 ---
+10. Risk Analysis and Mitigation
+Risk Probability Impact Mitigation
+SD card failure Medium High (plinth offline) Use industrial SD
+cards; keep spare im‐
+aged cards on-site;
+implement remote
+monitoring
+Network cable
+damageLow High (plinth offline) Use shielded cables;
+proper cable man‐
+agement; keep spare
+cables
+Stepper motor fail‐
+ureLow High (box won’t
+open)Use quality motor;
+preventive
+maintenance; spare
+motor on-site
+Button mechanical
+failureMedium Medium (button unre‐
+sponsive)Use high-quality
+switch rated for
+>100k actuations;
+spare button on-site
+Software crash Low Medium (system re‐
+start required)Systemd auto-restart;
+watchdog timer; re‐
+mote monitoring;
+thorough testing
+Q-SYS network is‐
+sueLow High (no show con‐
+trol)Redundant network
+path (if budget al‐
+lows); automatic re‐
+connection logic
+Power outage Low Low (system auto-re‐
+covers)UPS for management
+node (optional); sys‐
+temd auto-start
+Visitor misuse Medium Low (button held too
+long)Implement software
+timeout; button only
+active when system
+is idle40
+
+--- page 41 ---
+11. Optional Enhancements
+Enhancement Cost Benefit
+PoE (Power over Ethernet)
+for Plinths+$150 (PoE injector/switch +
+PoE HAT s)Single cable to each plinth
+(power + data), cleaner in‐
+stallation
+OLED Status Display on
+Management Node+$30 Visual indication of system
+status without needing SSH
+access
+UPS for Management
+Node+$150 Protection against brief power
+outages
+Audio Feedback from
+Plinths+$100 (3x small speakers) Audible click or chime when
+button is pressed (user feed‐
+back)
+Usage Analytics Dash‐
+board+$500 (software dev) Web dashboard showing but‐
+ton press frequency, peak
+times, etc.
+Backup Management Node +$535 (or +$185 for RPi) Hot spare in rack; automatic
+failover if primary node fails41
+
+--- page 42 ---
+12. Vendor and Contact Information
+Category Vendor Website Notes
+Raspberry Pi CanaKit, Adafruit, Di‐
+giKeycanakit.com, ada‐
+fruit.comAuthorized distribut‐
+ors
+Industrial PC ASUS, Intel, OnLogic asus.com, intel.com,
+onlogic.comRequest quote for
+PN51 or NUC 11
+Stepper Drivers StepperOnline, Po‐
+lolu, DigiKeyomc-stepperon‐
+line.com, pololu.comTMC2209 widely
+available
+Cabling Belden, Commscope,
+Cable Mattersbelden.com, comm‐
+scope.comBulk cable or custom
+lengths
+Rack Hardware Middle Atlantic,
+Raxxess, Penn Elcommiddleatlantic.com,
+raxxess.comStandard 19” rack
+components
+Power Supplies Mean Well, TDK-
+Lambda, DigiKeymeanwell.com, di‐
+gikey.comDIN-rail or chassis
+mount
+13. Summary and Final Recommendations (UPDATED)
+⚠️ CRITICAL CORRECTION NOTICE
+Issue Identified:  The original recommendations suggested hardware (ASUS PN51, Intel NUC) with
+only 2 native Ethernet ports, which is insufficient  for this system’s requirement of 4 Ethernet ports
+(3 plinths + 1 Q-SYS).
+Resolution:  Updated recommendations now provide TWO viable options with accurate hardware
+specifications that meet the 4-port requirement.
+13.1 Communication Protocol (UNCHANGED)
+Plinth ↔ Management Node:  Cat6 UTP Ethernet, 5m, OSC over UDP
+Management Node ↔ Q-SYS:  Cat6a S/FTP Ethernet, 40m, OSC over UDP or TCP/IP
+13.2 Hardware (CORRECTED)
+Plinth Hardware (UNCHANGED)
+Each Plinth:  Raspberry Pi 4 Model B (4GB), TMC2209 stepper driver, industrial SD card
+Quantity:  3 plinths
+Management Node Hardware (CORRECTED - TWO OPTIONS)
+OPTION 1: Qotom Q355G4 Mini PC (RECOMMENDED) ⭐
+Model:  Qotom Q355G4-S02
+Processor:  Intel Core i5-5200U (2.2-2.7GHz, dual-core)• 
+• 
+• 
+• 
+• 
+• 42
+
+--- page 43 ---
+RAM:  8GB DDR3L
+Storage:  128GB mSATA SSD
+Ethernet: 4x Native Gigabit LAN ports (Intel i210-AT)
+Cooling: Fanless  (silent, no moving parts)
+Power:  36W (12V 3A)
+Dimensions:  187mm x 140mm x 42mm (7.36” x 5.51” x 1.65”)
+Operating Temp:  0-60°C (industrial-grade)
+Cost:  ~$470 (including rack shelf)
+Why Recommended:
+- ✅ 4 native Ethernet ports (no adapters needed)
+- ✅ Fanless operation (silent for museum environment)
+- ✅ Industrial-grade reliability (24/7 operation)
+- ✅ Low power (36W)
+- ✅ Cost-effective (~$470)
+- ✅ Single device (fewer points of failure)
+Alternative:  Protectli Vault VP4650 (i5-8250U, 4 LAN ports, ~$650) - higher performance but more
+expensive
+OPTION 2: Intel NUC 11 Pro + Managed Switch
+Mini PC:  Intel NUC11TNHi5 (i5-1135G7, 8GB, 256GB)
+Switch:  TRENDnet TI-PG541i (5-port managed, industrial) OR Netgear GS305E (5-port, budget)
+Architecture:  NUC connects to switch for plinths, directly to Q-SYS for show control
+Power:  90W (NUC) + 20W (switch) = 110W total
+Cost:  ~$725 (industrial switch) or ~$585 (budget switch)
+When to Choose Option 2:
+- Need modern processor performance
+- Want spare Ethernet ports for expansion
+- Require advanced switch features (VLAN, port mirroring)
+- Prefer modular architecture (can replace switch independently)
+13.3 Critical Specifications for Vendor (UPDATED)
+Management Node Dimensions for Rack Layout:
+Option 1: Qotom Q355G4
+- Total Rack Width:  19 inches (482.6 mm) - standard rack width
+- Device Width:  187 mm (7.36”) - fits within 19” rack with room
+- Rack Depth Required:  200 mm (7.87”) - includes device + cable clearance
+- Rack Height:  1U (44.45 mm / 1.75 inches)
+- Device Height:  42 mm (1.65”) - fits in 1U with clearance
+- Weight (with shelf):  1.5 kg (3.3 lbs)
+- Mounting:  Placed on Middle Atlantic U1 vented 1U rack shelf
+Option 2: NUC + Switch
+- Total Rack Width:  19 inches (482.6 mm)
+- Combined Device Width:  261 mm (10.3”) - both devices side-by-side
+- Rack Depth Required:  160 mm (6.3”)
+- Rack Height:  1U (44.45 mm / 1.75 inches)• 
+• 
+• 
+• 
+• 
+• 
+• 
+• 
+• 
+• 
+• 
+• 
+• 43
+
+--- page 44 ---
+- Weight (with shelf):  2.0 kg (4.4 lbs)
+- Mounting:  Both devices on Middle Atlantic U1 vented shelf
+Cable Entry (Both Options):
+- Rear Panel:  4x RJ45 Ethernet ports (3 for plinths, 1 for Q-SYS)
+- Power:  DC barrel jack (Option 1) or separate DC adapters (Option 2)
+- Optional:  HDMI port for setup/diagnostics
+13.4 Cost Estimate (UPDATED)
+Configuration Total System Cost Breakdown
+Option 1: Qotom Q355G4
+(RECOMMENDED)$3,822 Plinths $522 + Mgmt $470 +
+Cabling $200 + Install $630 +
+Software $2,000
+Option 1: Protectli VP4650 $4,002 Plinths $522 + Mgmt $650 +
+other costs
+Option 2: NUC + Industrial
+Switch$4,077 Plinths $522 + Mgmt $725 +
+other costs
+Option 2: NUC + Budget
+Switch$3,937 Plinths $522 + Mgmt $585 +
+other costs
+Recommended Budget:  $4,200-$4,400 (Option 1 + 10-15% contingency)
+13.5 Timeline (UNCHANGED)
+Component Procurement:  2-3 weeks
+Software Development:  2-3 weeks (can overlap with procurement)
+On-Site Installation:  1-2 weeks
+Total Project Duration:  5-6 weeks from order to commissioning
+13.6 Key Success Factors (UPDATED)
+Select correct management node hardware  with 4 native Ethernet ports or proper switch con‐
+figuration
+Use industrial-grade SD cards  in all Raspberry Pi units (SanDisk High Endurance)
+Properly shield and ground  the 40m Cat6a cable to Q-SYS (use S/FTP shielded)
+Thorough testing  of interlock logic and motor control before final deployment
+Remote monitoring  setup from day one for proactive maintenance
+Spare parts inventory  on-site for rapid replacement
+Clear documentation  and training for museum staff
+Fanless operation preferred  for silent museum environment (Qotom recommended)
+13.7 Vendor Action Items (NEW)
+For Rack Layout Planning:
+1. Reserve 1U rack space  for management node
+2. Verify rack depth:  Minimum 200mm (8”) required for Option 1, 160mm (6.3”) for Option 2
+3. Plan cable routing:  4x Ethernet cables (3x 5m + 1x 40m) from rack to respective locations• 
+• 
+• 
+• 
+1. 
+2. 
+3. 
+4. 
+5. 
+6. 
+7. 
+8. 44
+
+--- page 45 ---
+4. Power planning:  Single 12V DC adapter (Option 1) or two adapters (Option 2)
+5. Cooling/Ventilation:  Use vented rack shelf; fanless Qotom generates minimal heat
+For Procurement:
+- Primary Recommendation:  Order Qotom Q355G4-S02 from authorized Qotom distributor or
+Amazon
+- Alternative Sources:  AliExpress, EnjoyGadgets, direct from Qotom China
+- Lead Time:  2-3 weeks for international shipping if not in stock locally
+- Verify Specifications:  Confirm 4x Gigabit LAN ports before ordering
+14. Next Steps
+Review and Approval:  Share this document with stakeholders (AL T ayer Stocks, 2D:3D, JLL, Blue‐
+haus)
+Component Selection:  Finalize choice between industrial mini PC vs. Raspberry Pi for
+management node
+Procurement:  Order all components (lead time: 2-3 weeks)
+Software Development:  Begin coding and testing plinth and management node software
+Q-SYS Programming:  Work with AV integrator to configure Q-SYS Designer
+Rack Layout Confirmation:  Provide vendor with management node dimensions (19” x
+250-300mm x 1U)
+Installation Coordination:  Schedule cabling and installation with on-site teams1. 
+2. 
+3. 
+4. 
+5. 
+6. 
+7. 45
+
+--- page 46 ---
+Appendix A: Glossary
+Term Definition
+OSC Open Sound Control - a protocol for commu‐
+nication between computers, synthesizers,
+and multimedia devices
+UDP User Datagram Protocol - a connectionless
+network protocol (fast but no guaranteed de‐
+livery)
+TCP/IP Transmission Control Protocol/Internet Pro‐
+tocol - connection-oriented (guaranteed deliv‐
+ery)
+DMX512 Digital Multiplex - a lighting control protocol
+(512 channels per universe)
+Q-SYS QSC’s software-based audio, video, and
+control platform
+GPIO General Purpose Input/Output - programmable
+pins on Raspberry Pi
+PWM Pulse Width Modulation - technique for con‐
+trolling LED brightness or motor speed
+Stepper Motor Motor that moves in precise increments
+(steps) rather than continuous rotation
+JST Connector A type of small connector commonly used for
+low-voltage devices
+Cat6/Cat6a Category 6/6a Ethernet cable - supports
+gigabit or 10-gigabit networking
+S/FTP Shielded/Foiled T wisted Pair - Ethernet cable
+with both overall shield and foil on each pair
+RJ45 Registered Jack 45 - standard Ethernet con‐
+nector
+1U One rack unit - 1.75 inches (44.45mm) of
+vertical rack space46
+
+--- page 47 ---
+Appendix B: Raspberry Pi GPIO Pinout Reference
+Raspberry Pi4ModelB-40-pinGPIOHeader(TopView)
+3V3(1)(2)5V
+GPIO2(3)(4)5V
+GPIO3(5)(6)GND
+GPIO4(7)(8)GPIO14
+GND(9)(10)GPIO15
+GPIO17(11)(12)GPIO18
+GPIO27(13)(14)GND
+GPIO22(15)(16)GPIO23
+3V3(17)(18)GPIO24
+GPIO10(19)(20)GND
+GPIO9(21)(22)GPIO25
+GPIO11(23)(24)GPIO8
+GND(25)(26)GPIO7
+GPIO0(27)(28)GPIO1
+GPIO5(29)(30)GND
+GPIO6(31)(32)GPIO12
+GPIO13(33)(34)GND
+GPIO19(35)(36)GPIO16
+GPIO26(37)(38)GPIO20
+GND(39)(40)GPIO21
+Forthisproject:
+-GPIO17(pin11):ButtonInput
+-GPIO27(pin13):Maintenance SwitchInput
+-GPIO22(pin15):ButtonLEDPWMOutput
+-GPIO23(pin16):Stepper STEPSignal
+-GPIO24(pin18):Stepper DIRECTION Signal
+-GPIO25(pin22):Stepper ENABLESignal
+-GND(pins6,9,14,20,25,30,34,39):CommonGround
+Appendix C: OSC Message Specification
+From Plinth to Management Node
+Message Type Value Range Description
+/plinth/1/button/
+pressBang - Button pressed on
+plinth 1
+/plinth/1/button/re‐
+leaseBang - Button released on
+plinth 1
+/plinth/1/mainten‐
+anceInteger 0 or 1 Maintenance switch
+state (0=glass on,
+1=glass off)
+/plinth/1/status String “ready”, “busy”,
+“maintenance”Plinth operational
+status47
+
+--- page 48 ---
+(Repeat for /plinth/2/...  and /plinth/3/... )
+From Management Node to Plinth
+Message Type Value Range Description
+/plinth/1/motor/
+openBang - Command to open
+jewellery box
+/plinth/1/motor/
+closeBang - Command to close
+jewellery box
+/plinth/1/led Integer 0-255 Set LED brightness
+(0=off, 255=full)
+/plinth/1/led/pulse Bang - Start pulsing LED ef‐
+fect
+/plinth/1/led/off Bang - Turn off LED
+/plinth/1/disable Bang - Disable button (inter‐
+lock)
+/plinth/1/enable Bang - Enable button
+From Management Node to Q-SYS
+Message Type Value Range Description
+/plinth/1/button/
+pressBang - Forwarded button
+press event
+/plinth/1/mainten‐
+anceInteger 0 or 1 Forwarded
+maintenance status
+From Q-SYS to Management Node
+Message Type Value Range Description
+/plinth/1/motor/
+openBang - Command to open
+box (forwarded to
+plinth)
+/plinth/1/motor/
+closeBang - Command to close
+box
+/system/reset Bang - Reset all plinths to
+ready state48
+
+--- page 49 ---
+Appendix D: Q-SYS Lua Script Example49
+
+--- page 50 ---
+-- Q-SYS Control Script for Jewellery Box Interactive
+-- Receives OSC messages from Management Node
+-- Sends motor commands back to Management Node
+-- UDP Configuration
+localudp_port_rx =5010-- Q-SYS receives on this port
+localudp_port_tx =5011-- Q-SYS sends to Management Node on this port
+localmanagement_node_ip ="192.168.10.1"
+-- UDP Socket
+udp=require("socket" ).udp()
+udp:setsockname ("*",udp_port_rx )
+udp:settimeout (0)-- Non-blocking
+-- Named Controls
+localplinth1_button =Controls ["plinth1_button" ]
+localplinth1_motor_open =Controls ["plinth1_motor_open" ]
+-- (Define for plinth2, plinth3...)
+-- OSC Parser (simplified - use full OSC library in production)
+function parseOSC (data)
+-- Extract OSC address and value
+-- Return address, value
+-- (Full implementation needed)
+end
+-- OSC Sender
+function sendOSC(address)
+localmsg=address .."\0"-- Simplified OSC message
+udp:sendto(msg,management_node_ip ,udp_port_tx )
+end
+-- Main Loop (in Q-SYS Timer or EventHandler)
+function checkUDP ()
+localdata,ip,port=udp:receivefrom ()
+ifdatathen
+localaddress,value=parseOSC (data)
+-- Handle button press
+ifaddress =="/plinth/1/button/press" then
+plinth1_button .Boolean =true
+-- Trigger audio cue
+Controls ["audio_cue_1" ]:Trigger()
+-- Trigger video
+Controls ["media_player_1" ].Play=true
+-- Open jewellery box
+sendOSC("/plinth/1/motor/open" )
+-- Disable other buttons
+sendOSC("/plinth/2/disable" )
+sendOSC("/plinth/3/disable" )
+-- After 90 seconds, close box and re-enable
+Timer.CallAfter (function ()
+sendOSC("/plinth/1/motor/close" )
+sendOSC("/plinth/1/enable" )
+sendOSC("/plinth/2/enable" )
+sendOSC("/plinth/3/enable" )
+plinth1_button .Boolean =false
+end,90)
+end
+-- (Handle other OSC messages...)50
+
+--- page 51 ---
+end
+end
+-- Run checkUDP every 50ms
+Timer.CallPeriodic (checkUDP ,0.05)
+END OF DOCUMENT
+Document Control:
+Version Date Author Changes
+1.0 2025-11-03 DeepAgent / AI Ana‐
+lysisInitial comprehensive
+technical recom‐
+mendations
+Distribution:
+- AL T ayer Stocks (Main Contractor)
+- 2D:3D (Subcontractor)
+- JLL (Project Management Consultant)
+- Bluehaus Group (Lead Consultant/Design Architect)
+- Q-SYS Integrator (AV/IT Specialist)
+For Questions or Clarifications, Contact:
+- Project T echnical T eam via [project contact information]
+This document provides technical recommendations based on the information provided and industry
+best practices. Final component selection and system design should be verified by qualified engineers
+and tested in a lab environment before deployment.51

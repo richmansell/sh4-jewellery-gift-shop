@@ -1,0 +1,75 @@
+{
+  "network": {
+    "managementNode": {
+      "hostname": "jewellery-box-mgmt",
+      "ips": {
+        "plinth1": "192.168.10.11",
+        "plinth2": "192.168.10.12",
+        "plinth3": "192.168.10.13",
+        "mgmtWan": "192.168.10.1",
+        "qsysCore": "192.168.10.50"
+      },
+      "gateway": "192.168.10.1",
+      "dns": ["1.1.1.1", "8.8.8.8"],
+      "subnet": "255.255.255.0"
+    },
+    "osc": {
+      "plinths": {
+        "plinth1": { "port": 5000, "localPort": 6000 },
+        "plinth2": { "port": 5001, "localPort": 6001 },
+        "plinth3": { "port": 5002, "localPort": 6002 }
+      },
+      "qsys": {
+        "rxPort": 5010,
+        "txPort": 5011
+      }
+    }
+  },
+  "hardware": {
+    "managementNode": {
+      "model": "Qotom Q355G4-S02",
+      "cpu": "Intel i5-5200U",
+      "ram": "8GB",
+      "storage": "128GB SSD",
+      "nics": 4,
+      "power": "12V DC 3A"
+    },
+    "plinth": {
+      "controller": "Raspberry Pi 4 Model B 4GB",
+      "storage": "32GB industrial microSD",
+      "stepper": "NEMA 17 with TMC2209",
+      "power": "5V/3A official PSU"
+    }
+  },
+  "gpio": {
+    "plinth": {
+      "button": 17,
+      "maintenanceSwitch": 27,
+      "ledPwm": 22,
+      "motorStep": 23,
+      "motorDir": 24,
+      "motorEnable": 25
+    }
+  },
+  "motor": {
+    "stepDelay": 0.002,
+    "stepsToOpen": 1000,
+    "stepsToClose": 1000,
+    "microsteps": 16
+  },
+  "button": {
+    "debounceDelay": 0.02,
+    "maintenanceHoldTime": 4.0
+  },
+  "limits": {
+    "plinthHeartbeatTimeout": 30000,
+    "qsysHeartbeatTimeout": 60000,
+    "reconnectAttempts": 10,
+    "reconnectDelay": 5000
+  },
+  "logging": {
+    "level": "info",
+    "plinthLogFile": "/var/log/plinth_%i.log",
+    "mgmtLogFile": "/var/log/jewellery_box_mgmt.log"
+  }
+}

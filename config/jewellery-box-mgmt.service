@@ -1,0 +1,32 @@
+[Unit]
+Description=Jewellery Box Interactive - Management Node Server
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=root
+WorkingDirectory=/opt/jewellery-box/management_node
+Environment="QSYS_IP=192.168.1.200"
+Environment="LOG_LEVEL=info"
+Environment="NODE_ENV=production"
+
+ExecStart=/usr/bin/node /opt/jewellery-box/management_node/server.js
+
+# Auto-restart on failure
+Restart=always
+RestartSec=10
+StartLimitInterval=300
+StartLimitBurst=5
+
+# Security (run as root for network access; consider using systemd socket activation)
+# NoNewPrivileges=true
+PrivateTmp=true
+
+# Logging
+StandardOutput=journal
+StandardError=journal
+SyslogIdentifier=jewellery-box-mgmt
+
+[Install]
+WantedBy=multi-user.target

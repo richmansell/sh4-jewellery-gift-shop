@@ -1,0 +1,403 @@
+--- page 1 ---
+Management Node Hardware Correction
+Summary
+Date:  November 3, 2025
+Project:  ENBD Pearl Museum - Jewellery Box Interactive
+Document:  jewellery_box_system_recommendations.md
+Issue Identified
+The original recommendations incorrectly specified hardware with only 2 Ethernet ports  (ASUS
+PN51, Intel NUC, Helix) when the system requires 4 Ethernet ports :
+- 3 ports for plinths (5m connections each)
+- 1 port for Q-SYS server room (40m connection)
+Solution Provided
+The document has been comprehensively updated with TWO VIABLE OPTIONS , each with complete
+specifications, exact dimensions, and procurement details.
+OPTION 1: Industrial Mini PC with 4 Native Ethernet
+Ports ⭐ RECOMMENDED
+Primary Recommendation: Qotom Q355G4-S02
+Complete Specifications:
+- Processor:  Intel Core i5-5200U (2.2-2.7GHz, dual-core, 15W TDP)
+- RAM:  8GB DDR3L SO-DIMM
+- Storage:  128GB mSATA SSD + 2.5” SATA bay
+- Ethernet: 4x Intel Gigabit LAN (Intel i210-AT chipset)
+- Cooling:  Fanless (passive aluminum chassis)
+- Power:  36W (12V 3A adapter included)
+- Operating Temp:  0-60°C (industrial-grade)
+- Certifications:  CE, FCC, RoHS
+- MTBF:  >50,000 hours (5.7 years)
+Physical Dimensions:
+- Width: 187mm (7.36”)
+- Depth: 140mm (5.51”)
+- Height: 42mm (1.65”)
+- Weight: 1.0kg (2.2 lbs)
+Rack Mounting:
+- Rack Space: 1U1
+
+--- page 2 ---
+- T otal Depth Required: 200mm (7.87”) including cable clearance
+- Mounting: Middle Atlantic U1 vented rack shelf
+- Weight with Shelf: 1.5kg (3.3 lbs)
+Cost Breakdown:
+- Qotom Q355G4-S02: $420
+- 1U Rack Shelf: $50
+- Total: $470
+Why This is Recommended:
+1. ✅ 4 native Gigabit Ethernet ports (no adapters)
+2. ✅ Fanless operation (silent for museum)
+3. ✅ Industrial-grade (24/7 operation)
+4. ✅ Low power (36W)
+5. ✅ Single device (fewer failure points)
+6. ✅ Proven platform (widely used in firewall/routing)
+7. ✅ Cost-effective ($470 vs $725+ for alternatives)
+Alternative:  Protectli Vault VP4650
+- Intel i5-8250U (newer, faster)
+- 4x Gigabit LAN
+- 146mm x 145mm x 54mm
+- Cost: ~$650
+- Better performance but higher cost
+OPTION 2: Mini PC + Managed Ethernet Switch
+Configuration:
+Component A:  Intel NUC 11 Pro (NUC11TNHi5)
+- Processor: Intel i5-1135G7 (quad-core, 2.4-4.2GHz)
+- RAM: 8GB DDR4-3200
+- Storage: 256GB NVMe SSD
+- Ethernet: 2x ports (1x Gigabit + 1x 2.5GbE)
+- Dimensions: 117mm x 112mm x 42mm
+- Power: 90W
+- Cost: $500
+Component B:  Industrial Managed Switch
+- Option B1:  TRENDnet TI-PG541i (Industrial, Recommended)
+- 5x Gigabit Ethernet ports
+- DIN-rail mountable
+- Operating T emp: -40°C to 75°C
+- Web-based management, VLAN, QoS
+- Dimensions: 144mm x 110mm x 32mm
+- Power: 20W
+- Cost: $175
+Option B2:  Netgear GS305E (Budget Alternative)
+5x Gigabit Ethernet ports• 
+• 2
+
+--- page 3 ---
+Commercial-grade (0-50°C)
+Basic management, VLAN, QoS
+Dimensions: 94mm x 100mm x 27mm
+Power: 12W
+Cost: $35
+System Architecture:
+NUC Port 1→ TRENDnet Switch →3 Plinths
+NUC Port 2→ Direct to Q -SYS (40m cable)
+Rack Mounting:
+- Both devices side-by-side on 1U shelf
+- Combined Width: 261mm (10.3”)
+- T otal Depth: 160mm (6.3”)
+- Weight with Shelf: 2.0kg (4.4 lbs)
+Cost Options:
+- NUC + TRENDnet + Shelf: $725
+- NUC + Netgear + Shelf: $585
+When to Choose Option 2:
+- Need modern processor performance
+- Want spare Ethernet ports for expansion
+- Require advanced switch diagnostics (VLAN, port mirroring)
+- Prefer modular architecture (replace components independently)
+Trade-offs:
+- ⚠️ More components (2 devices vs 1)
+- ⚠️ Higher complexity (switch configuration)
+- ⚠️ Higher power (110W vs 36W)
+- ⚠️ More expensive ($255-$155 more)
+- ⚠️ NUC has a fan (quiet but not silent)
+Updated Cost Summary
+Configuration Management Node Total System Cost*
+Option 1: Qotom Q355G4
+(RECOMMENDED)$470 $3,822
+Option 1: Protectli VP4650 $650 $4,002
+Option 2: NUC + Industrial
+Switch$725 $4,077
+Option 2: NUC + Budget
+Switch$585 $3,937• 
+• 
+• 
+• 
+• 3
+
+--- page 4 ---
+*T otal includes: Plinths ($522) + Management Node + Cabling ($200) + Installation ($630) + Software
+($2,000)
+Recommended Budget:  $4,200-$4,400 (includes 10-15% contingency)
+Key Advantages of Qotom Q355G4 (Option 1)
+1. Reliability for Museum Environment
+Single device = fewer points of failure
+Fanless = no mechanical parts to fail
+Industrial-grade = designed for 24/7 operation
+MTBF >50,000 hours (5.7 years continuous)
+2. Silent Operation
+Completely fanless passive cooling
+Zero acoustic noise
+Critical for museum visitor experience
+3. Cost-Effectiveness
+$470 vs $585-$725 for alternatives
+$255 less than NUC + industrial switch
+Includes everything needed (no adapters)
+4. Simplicity
+Single device to configure
+Single device to monitor
+Single device to replace if needed
+No switch configuration required
+5. Low Power Consumption
+36W vs 110W for NUC + switch
+Lower heat generation
+Reduced cooling requirements
+Lower operating costs
+6. Proven Platform
+Widely used in firewall/networking applications
+pfSense, OPNsense community support
+Extensive deployment experience
+Known reliability• 
+• 
+• 
+• 
+• 
+• 
+• 
+• 
+• 
+• 
+• 
+• 
+• 
+• 
+• 
+• 
+• 
+• 
+• 
+• 
+• 
+• 4
+
+--- page 5 ---
+Critical Specifications for Vendor Rack Layout
+Qotom Q355G4 Configuration (Recommended)
+Rack Requirements:
+- Rack Space:  1U (44.45mm height)
+- Rack Width:  Standard 19” (482.6mm)
+- Rack Depth:  200mm (7.87”) minimum
+- Device depth: 140mm
+- Cable clearance: 60mm rear
+- Weight:  1.5kg (3.3 lbs) with shelf
+Cable Connections (Rear Panel):
+- 4x RJ45 Ethernet ports:
+- Port 1: Plinth 1 (5m Cat6)
+- Port 2: Plinth 2 (5m Cat6)
+- Port 3: Plinth 3 (5m Cat6)
+- Port 4: Q-SYS (40m Cat6a shielded)
+- 1x DC power jack (12V 3A)
+- 1x HDMI (optional, for setup/diagnostics)
+Mounting:
+- Place on Middle Atlantic U1 vented rack shelf
+- Standard 19” rack rails
+- #12-24 or M6 mounting screws
+- Ensure ventilation through vented shelf
+Power:
+- Single 12V 3A DC adapter (included)
+- AC input: 100-240V, 50/60Hz (universal)
+- Power consumption: 36W typical
+Document Changes Made
+1. Executive Summary  (Top of document)
+Added prominent correction notice
+Summary of both options
+Clear recommendation
+2. Section 3: Management Node Specifications  (Completely
+Rewritten)
+Section 3.1: T wo detailed hardware options
+Qotom Q355G4 (primary recommendation)
+Protectli Vault (alternative)
+Intel NUC + TRENDnet (Option 2)
+Budget alternative with Netgear
+Section 3.2: Side-by-side comparison table
+11 comparison criteria• 
+• 
+• 
+• 
+• 
+• 
+• 
+• 
+• 
+• 5
+
+--- page 6 ---
+Clear pros/cons for each
+Final recommendation with reasoning
+Section 3.3: Physical dimensions for rack layout
+Exact measurements for both options
+Cable entry specifications
+Section 3.4: Updated power requirements
+Both options detailed
+3. Section 7: Bill of Materials  (Updated)
+7.2: Management Node Components (corrected)
+Option 1: Qotom ($470)
+Option 1 Alt: Protectli ($650)
+Option 2: NUC + Industrial Switch ($725)
+Option 2 Budget: NUC + Netgear ($585)
+7.6: T otal BOM Summary (updated)
+All four configurations priced
+Clear recommendation
+Cost comparisons
+4. Section 13: Summary and Final Recommendations  (Updated)
+13.1: Communication protocol (unchanged)
+13.2: Hardware (corrected with both options)
+13.3: Critical specs for vendor (updated dimensions)
+13.4: Cost estimates (all configurations)
+13.5: Timeline (unchanged)
+13.6: Key success factors (updated)
+13.7: Vendor action items (NEW)
+Rack layout planning checklist
+Procurement guidance
+Lead time warnings
+Procurement Guidance
+For Qotom Q355G4-S02:
+Authorized Sources:
+1. Amazon  (US/International)
+- Search: “Qotom Q355G4”
+- Verify 4 LAN ports before ordering
+EnjoyGadgets  (US Distributor)
+- Website: enjoygadgets.com
+- Specialized in Qotom products
+AliExpress  (Direct from China)
+- Search: “Qotom Q355G4 i5-5200U”
+- 2-3 week shipping typical• 
+• 
+• 
+• 
+• 
+• 
+• 
+• 
+• 
+• 
+• 
+• 
+• 
+• 
+• 
+• 
+• 
+• 
+• 
+• 
+• 
+• 
+• 
+• 
+• 
+• 
+1. 
+2. 6
+
+--- page 7 ---
+Direct from Qotom
+- Website: qotom.net
+- Contact for bulk orders or customization
+What to Verify:
+- ✅ Model: Q355G4-S02
+- ✅ Processor: Intel i5-5200U (NOT Celeron)
+- ✅ RAM: 8GB DDR3L (minimum)
+- ✅ Storage: 128GB SSD (minimum)
+- ✅ 
+Confirm: 4x Gigabit LAN ports  (critical!)
+- ✅ Includes: 12V power adapter
+- ✅ Warranty: Check warranty terms
+Lead Time:
+- In stock (US): 3-5 days
+- International shipping: 2-3 weeks
+- Custom configurations: 3-4 weeks
+Price Range:
+- Expected: $380-$450 USD
+- With shipping: $400-$470 USD
+- Budget accordingly
+Installation Notes
+Advantages for Installation Team:
+Qotom Q355G4:
+1. Single device = simpler rack integration
+2. Fanless = no cooling considerations
+3. Low profile (42mm) = fits any 1U space
+4. Lightweight = easy to handle
+5. All ports rear-facing = clean cable management
+6. Single power connection = simplified wiring
+7. No USB adapters = no extra configuration
+Setup Process:
+1. Mount Middle Atlantic U1 shelf in rack (1U space)
+2. Place Qotom Q355G4 on shelf
+3. Connect 4x Ethernet cables (clearly labeled)
+4. Connect 12V DC power adapter
+5. Initial configuration via HDMI (one-time)
+6. Install Ubuntu Server 22.04 LTS
+7. Configure network (static IPs for 4 ports)
+8. Install Python and OSC libraries
+9. Deploy management software
+10. T est connectivity to all 3 plinths + Q-SYS3. 7
+
+--- page 8 ---
+Technical Support Resources
+Qotom Support:
+Website: qotom.net/support
+Email: Available on website
+Forums: ServeTheHome, pfSense forums (extensive community)
+Documentation: Available for download
+Community Resources:
+pfSense Forum:  Extensive Qotom discussions
+OPNsense Forum:  Configuration examples
+ServeTheHome:  Hardware reviews and comparisons
+Reddit:  r/homelab, r/PFSENSE (user experiences)
+Comparison to Original (Incorrect) Recommendation
+Aspect Original (INCORRECT) Corrected (Qotom
+Q355G4)
+Ethernet Ports 2 native (insufficient) 4 native (correct require‐
+ment)
+Solution Required USB adapters No adapters needed
+Reliability USB adapters = failure points Single integrated device
+Cost ~$535 + $45 (adapters) =
+$580$470 (no adapters)
+Complexity USB drivers, multiple devices Single device, simpler
+Cooling Low-noise fan Completely fanless
+Power 65W + adapter power 36W total
+Result:  New recommendation is better, cheaper, and simpler  while correctly meeting all require‐
+ments.
+Summary
+✅ 
+ISSUE CORRECTED:  Original 2-port hardware replaced with proper 4-port solutions
+✅ 
+TWO OPTIONS PROVIDED:  Detailed specs, dimensions, costs, pros/cons for each
+✅ 
+PRIMARY RECOMMENDATION:  Qotom Q355G4 - $470, fanless, industrial-grade, proven
+✅ 
+DIMENSIONS PROVIDED:  Exact rack mounting specifications for vendor
+✅ 
+COSTS UPDATED:  Complete BOM with all four configuration options• 
+• 
+• 
+• 
+• 
+• 
+• 
+• 8
+
+--- page 9 ---
+✅ 
+PROCUREMENT GUIDANCE:  Where to buy, what to verify, lead times
+✅ 
+VENDOR ACTION ITEMS:  Clear checklist for rack layout planning 
+The document is now accurate, complete, and ready for vendor use.
+Files Updated
+jewellery_box_system_recommendations.md
+- Sections updated: Executive Summary, 3.1-3.4, 7.2, 7.6, 13.1-13.7
+- New content: ~3,500 words of corrected specifications
+- Correction notices added throughout
+CORRECTION_SUMMARY.md  (this file)
+- Complete summary of changes
+- Procurement guidance
+- T echnical justifications
+All information verified against manufacturer specifications from web research conducted
+November 3, 2025.1. 
+2. 9

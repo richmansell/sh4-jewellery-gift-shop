@@ -1,0 +1,22 @@
+{
+  "name": "jewellery-box-management-node",
+  "version": "1.0.0",
+  "description": "Management node for Jewellery Box Interactive system",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "dev": "node --watch server.js",
+    "test": "node tests/test_osc.js"
+  },
+  "keywords": [
+    "osc",
+    "jewellery-box",
+    "interactive",
+    "plinth"
+  ],
+  "author": "Development Team",
+  "license": "MIT",
+  "engines": {
+    "node": ">=14.0.0"
+  }
+}

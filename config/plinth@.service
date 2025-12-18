@@ -1,0 +1,36 @@
+[Unit]
+Description=Jewellery Box Interactive - Plinth %i Controller
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=pi
+WorkingDirectory=/opt/jewellery-box/plinth
+Environment="PLINTH_ID=%i"
+Environment="MGMT_NODE_IP=192.168.1.100"
+Environment="LOG_LEVEL=info"
+
+ExecStart=/usr/bin/python3 /opt/jewellery-box/plinth/plinth_controller.py
+
+# Auto-restart on failure
+Restart=always
+RestartSec=10
+StartLimitInterval=300
+StartLimitBurst=5
+
+# Security
+NoNewPrivileges=true
+PrivateTmp=true
+
+# Watchdog (systemd will restart if no heartbeat)
+Type=notify
+WatchdogSec=60
+
+# Logging
+StandardOutput=journal
+StandardError=journal
+SyslogIdentifier=plinth-%i
+
+[Install]
+WantedBy=multi-user.target
