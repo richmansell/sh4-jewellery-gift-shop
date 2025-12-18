@@ -22,6 +22,8 @@
  *     /plinth/[1-3]/motor/open
  *     /plinth/[1-3]/motor/close
  *     /plinth/[1-3]/led [0-255]
+ *     /plinth/[1-3]/led/pulse
+ *     /plinth/[1-3]/led/off
  *     /plinth/[1-3]/enable
  *     /plinth/[1-3]/disable
  *
@@ -32,6 +34,8 @@
  *   Receive from Q-SYS (port 5011):
  *     /plinth/[1-3]/motor/open
  *     /plinth/[1-3]/motor/close
+ *     /plinth/[1-3]/led/pulse
+ *     /plinth/[1-3]/led/off
  *     /system/reset
  *
  * Author: Development Team
@@ -514,6 +518,14 @@ class ManagementNodeServer {
       } else if (osc.address.endsWith('/close')) {
         this.sendToPlinth(plinthId, new OSCMessage(`/plinth/${plinthId}/motor/close`, []));
         Logger.info(`Q-SYS: Close motor on plinth ${plinthId}`);
+      }
+    } else if (osc.address.includes('/led/')) {
+      if (osc.address.endsWith('/pulse')) {
+        this.sendToPlinth(plinthId, new OSCMessage(`/plinth/${plinthId}/led/pulse`, []));
+        Logger.info(`Q-SYS: LED pulse on plinth ${plinthId}`);
+      } else if (osc.address.endsWith('/off')) {
+        this.sendToPlinth(plinthId, new OSCMessage(`/plinth/${plinthId}/led/off`, []));
+        Logger.info(`Q-SYS: LED off on plinth ${plinthId}`);
       }
     } else if (osc.address === '/system/reset') {
       Logger.warn('Q-SYS: System reset command');

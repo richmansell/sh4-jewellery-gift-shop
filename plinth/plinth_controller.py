@@ -170,6 +170,7 @@ class GPIOHandler:
     def __init__(self):
         self.is_simulated = GPIO is None
         self.gpio_state = {}
+        self.pulsing = False  # Track LED pulsing state
         
         if not self.is_simulated:
             self._init_real_gpio()
@@ -234,6 +235,61 @@ class GPIOHandler:
             self.led_pwm.ChangeDutyCycle(duty_cycle)
         except Exception as e:
             logger.error(f"Error setting LED brightness: {e}")
+    
+    def start_led_pulse(self, pulse_freq=2.0, max_brightness=255, min_brightness=50):
+        """
+        Start LED pulsing animation.
+        
+        Args:
+            pulse_freq: Pulse frequency in Hz (default 2 Hz = 0.5s cycle)
+            max_brightness: Maximum brightness (0-255)
+            min_brightness: Minimum brightness (0-255)
+        """
+        if self.is_simulated:
+            logger.debug(f"[SIM] LED pulse started (freq={pulse_freq}Hz, max={max_brightness}, min={min_brightness})")
+            return
+        
+        def pulse_animation():
+            """Run pulsing animation in loop."""
+            cycle_time = 1.0 / pulse_freq
+            half_cycle = cycle_time / 2.0
+            step_duration = 0.02  # 20ms steps for smooth animation
+            steps = int(half_cycle / step_duration)
+            
+            try:
+                while self.pulsing:
+                    # Fade in (min -> max)
+                    brightness_range = max_brightness - min_brightness
+                    for step in range(steps):
+                        if not self.pulsing:
+                            return
+                        brightness = min_brightness + (brightness_range * step / steps)
+                        self.set_led_brightness(int(brightness))
+                        time.sleep(step_duration)
+                    
+                    # Fade out (max -> min)
+                    for step in range(steps):
+                        if not self.pulsing:
+                            return
+                        brightness = max_brightness - (brightness_range * step / steps)
+                        self.set_led_brightness(int(brightness))
+                        time.sleep(step_duration)
+                
+                # Stop pulsing - turn LED off
+                self.set_led_brightness(0)
+                logger.debug("LED pulse animation stopped")
+            except Exception as e:
+                logger.error(f"Error in LED pulse animation: {e}")
+        
+        self.pulsing = True
+        pulse_thread = threading.Thread(target=pulse_animation, daemon=True)
+        pulse_thread.start()
+        logger.debug(f"LED pulse started (freq={pulse_freq}Hz)")
+    
+    def stop_led_pulse(self):
+        """Stop LED pulsing animation."""
+        self.pulsing = False
+        logger.debug("LED pulse stop requested")
     
     def cleanup(self):
         """Clean up GPIO resources."""
@@ -429,6 +485,8 @@ class OSCServer:
         self.dispatcher.map(f"/plinth/{plinth_id}/motor/open", self._handle_motor_open)
         self.dispatcher.map(f"/plinth/{plinth_id}/motor/close", self._handle_motor_close)
         self.dispatcher.map(f"/plinth/{plinth_id}/led", self._handle_led)
+        self.dispatcher.map(f"/plinth/{plinth_id}/led/pulse", self._handle_led_pulse)
+        self.dispatcher.map(f"/plinth/{plinth_id}/led/off", self._handle_led_off)
         self.dispatcher.map(f"/plinth/{plinth_id}/enable", self._handle_enable)
         self.dispatcher.map(f"/plinth/{plinth_id}/disable", self._handle_disable)
     
@@ -459,7 +517,20 @@ class OSCServer:
         """Handle LED brightness command."""
         brightness = max(0, min(255, int(brightness)))
         logger.debug(f"LED brightness set to {brightness}")
+        self.gpio_handler.stop_led_pulse()  # Stop any ongoing pulse
         self.gpio_handler.set_led_brightness(brightness)
+    
+    def _handle_led_pulse(self, addr, value):
+        """Handle LED pulsing command (bang type)."""
+        logger.info("LED pulse effect started")
+        # Pulse with 2Hz frequency, 255 max brightness, 50 min brightness
+        self.gpio_handler.start_led_pulse(pulse_freq=2.0, max_brightness=255, min_brightness=50)
+    
+    def _handle_led_off(self, addr, value):
+        """Handle LED off command."""
+        logger.debug("LED turned off")
+        self.gpio_handler.stop_led_pulse()  # Stop any ongoing pulse
+        self.gpio_handler.set_led_brightness(0)
     
     def _handle_enable(self, addr, value):
         """Handle enable command."""
