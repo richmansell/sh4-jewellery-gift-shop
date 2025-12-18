@@ -117,6 +117,7 @@ def setup_logging():
         os.makedirs(log_dir, exist_ok=True)
     
     # File handler
+    file_handler = None
     try:
         file_handler = logging.FileHandler(PlinthConfig.LOG_FILE)
         file_handler.setLevel(PlinthConfig.LOG_LEVEL)
@@ -134,7 +135,8 @@ def setup_logging():
         datefmt='%Y-%m-%d %H:%M:%S'
     )
     console_handler.setFormatter(formatter)
-    file_handler.setFormatter(formatter) if log_dir else None
+    if file_handler:
+        file_handler.setFormatter(formatter)
     
     return logger
 
@@ -645,6 +647,7 @@ class PlinthController:
     
     def _watchdog_loop(self):
         """Monitor system health and reconnect if needed."""
+        heartbeat_counter = 0
         while self.running:
             try:
                 # Check if OSC client is connected
@@ -653,10 +656,23 @@ class PlinthController:
                     time.sleep(PlinthConfig.RECONNECT_DELAY)
                     self.osc_client.reconnect()
                 
-                time.sleep(5.0)  # Check every 5 seconds
+                # Send periodic heartbeat every 5 seconds
+                heartbeat_counter += 1
+                if heartbeat_counter >= 5:
+                    if self.osc_client.client:
+                        try:
+                            self.osc_client.client.send_message(
+                                f"/plinth/{PlinthConfig.PLINTH_ID}/heartbeat", 1
+                            )
+                            logger.debug(f"Heartbeat sent to management node")
+                        except Exception as e:
+                            logger.error(f"Failed to send heartbeat: {e}")
+                    heartbeat_counter = 0
+                
+                time.sleep(1.0)  # Check every 1 second (for better heartbeat timing)
             except Exception as e:
                 logger.error(f"Error in watchdog loop: {e}")
-                time.sleep(5.0)
+                time.sleep(1.0)
 
 # ============================================================================
 # Main Entry Point

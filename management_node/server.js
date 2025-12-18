@@ -17,6 +17,7 @@
  *     /plinth/[1-3]/button/press
  *     /plinth/[1-3]/button/release
  *     /plinth/[1-3]/maintenance [0|1]
+ *     /plinth/[1-3]/heartbeat (keep-alive, sent every 5 seconds)
  *
  *   Send to plinths:
  *     /plinth/[1-3]/motor/open
@@ -477,6 +478,12 @@ class ManagementNodeServer {
     plinth.connected = true;
     
     Logger.debug(`Received from plinth ${plinthId}: ${osc.address}`);
+    
+    // Handle heartbeat (keep-alive)
+    if (osc.address === `/plinth/${plinthId}/heartbeat`) {
+      Logger.debug(`Heartbeat from plinth ${plinthId}`);
+      return;
+    }
     
     if (osc.address === `/plinth/${plinthId}/button/press`) {
       plinth.buttonPressed = true;
